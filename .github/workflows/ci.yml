@@ -35,6 +35,18 @@ jobs:
               assert c.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == '20261015_0600'
           engine.dispose()
           PY
+      - name: Audit integritas historis tanpa data resmi
+        env:
+          RPI_DATABASE_URL: sqlite+pysqlite:////tmp/rpi-ci-alembic-historis.sqlite3
+        run: |
+          python scripts/audit_kesiapan_nasional.py --laporan /tmp/rpi-audit-integritas.json
+          python - <<'PY'
+          import json
+          with open('/tmp/rpi-audit-integritas.json', encoding='utf-8') as f:
+              audit = json.load(f)
+          assert audit["status_kesiapan"] == "menunggu_dataset_resmi"
+          assert audit["publikasi_diizinkan_otomatis"] is False
+          PY
       - name: Build SQLite, JSON, CSV and checksums
         run: python scripts/build_release.py
       - name: Publish multi-format artifacts
