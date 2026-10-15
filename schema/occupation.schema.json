@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/nor-id/schema/occupation.schema.json",
+  "title": "NOR-ID occupation record (curated, not official KBJI)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["occupation_id", "preferred_name_id", "alternative_names", "sector_id", "description_id", "source_id", "record_status", "last_reviewed"],
+  "properties": {
+    "occupation_id": { "type": "string", "pattern": "^ID-OCC-[0-9]{6}$" },
+    "preferred_name_id": { "type": "string", "minLength": 1 },
+    "alternative_names": { "type": "string", "description": "Aliases separated by | in the CSV seed; database normalizes them in occupation_aliases." },
+    "sector_id": { "type": "string", "pattern": "^SEC-[0-9]{3}$" },
+    "description_id": { "type": "string" },
+    "source_id": { "type": "string", "minLength": 1 },
+    "record_status": { "type": "string", "enum": ["draft", "reviewed", "published", "archived"] },
+    "last_reviewed": { "type": "string", "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+  }
+}

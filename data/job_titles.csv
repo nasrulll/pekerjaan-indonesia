@@ -1,0 +1,4 @@
+title_id,title_name_id,occupation_id,seniority_level,context_code,notes
+TTL-0001,Kepala Sekolah,ID-OCC-000108,lead,YAYASAN,Contoh jabatan; dapat disandang ASN atau swasta tergantung lembaga
+TTL-0002,Kepala Toko,ID-OCC-000484,lead,SWASTA,Contoh jabatan operasional
+TTL-0003,Senior Backend Developer,ID-OCC-000200,senior,SWASTA,"Contoh jenjang jabatan, bukan pekerjaan KBJI tersendiri"

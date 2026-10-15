@@ -1,0 +1,11 @@
+context_code,label_id,dimension
+ASN-PNS,Aparatur Sipil Negara - Pegawai Negeri Sipil,employment_status
+ASN-PPPK,Aparatur Sipil Negara - Pegawai Pemerintah dengan Perjanjian Kerja,employment_status
+BUMN,Badan Usaha Milik Negara,employer_sector
+BUMD,Badan Usaha Milik Daerah,employer_sector
+SWASTA,Perusahaan swasta,employer_sector
+YAYASAN,Lembaga yayasan,employer_sector
+WIRAUSAHA,Wirausaha / usaha mandiri,work_arrangement
+FREELANCE,Pekerja lepas,work_arrangement
+INFORMAL,Pekerja informal,work_arrangement
+KOPERASI,Koperasi,employer_sector
