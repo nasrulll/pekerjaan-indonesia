@@ -84,6 +84,22 @@ class UjiAuditPaketNasional(unittest.TestCase):
         with self.assertRaises(ValueError):
             baca_tabel(f, {'kode','nama'})
 
+    def test_cli_dieksekusi_langsung(self):
+        import subprocess
+        import sys
+        paket = self.berkas()
+        result = subprocess.run(
+            [sys.executable, "scripts/audit_paket_nasional.py",
+             "--kbji", str(paket["kbji"][0]), "--manifest-kbji", str(paket["kbji"][1]),
+             "--wilayah", str(paket["wilayah"][0]), "--manifest-wilayah", str(paket["wilayah"][1]),
+             "--upah", str(paket["upah"][0]), "--manifest-upah", str(paket["upah"][1])],
+            cwd=Path(__file__).resolve().parent.parent,
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(json.loads(result.stdout)["status_publikasi"],
+                         "DIBLOKIR_MENUNGGU_PERSETUJUAN_MANUSIA")
+
     def test_paket_valid_tetap_tidak_diterbitkan(self):
         paket = self.berkas()
         hasil = audit_paket(paket)
