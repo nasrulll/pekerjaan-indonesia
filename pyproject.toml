@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pekerjaan-indonesia"
+version = "0.2.0"
+description = "NOR-ID: katalog terbuka pekerjaan Indonesia, API read-only dan database multiplatform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = ["fastapi>=0.110,<1", "sqlalchemy>=2.0,<3"]
+
+[project.optional-dependencies]
+server = ["uvicorn>=0.28,<1"]
+postgres = ["psycopg[binary]>=3.1,<4"]
+test = ["httpx>=0.26,<1"]
+all = ["uvicorn>=0.28,<1", "psycopg[binary]>=3.1,<4", "httpx>=0.26,<1"]
+
+[tool.setuptools.packages.find]
+include = ["nor_id*"]

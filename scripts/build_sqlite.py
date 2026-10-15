@@ -1,63 +1,128 @@
 #!/usr/bin/env python3
-"""Build a searchable local SQLite catalog; requires Python standard library only."""
+"""Atomically build a read-only-friendly SQLite snapshot from validated Git CSV."""
 import argparse
 import json
+import os
 import sqlite3
+import tempfile
 from pathlib import Path
 from validate import ROOT, read_csv, check
 
 
-def build(db_path:Path,root=ROOT):
-    errors,stats=check(root)
-    if errors: raise ValueError('Dataset invalid:\n'+'\n'.join(errors))
-    db_path.parent.mkdir(parents=True,exist_ok=True)
-    if db_path.exists(): db_path.unlink()
-    con=sqlite3.connect(db_path)
+SCHEMA = '''
+PRAGMA foreign_keys = ON;
+CREATE TABLE sectors(
+    sector_id TEXT PRIMARY KEY, sector_name TEXT NOT NULL UNIQUE,
+    sector_type TEXT NOT NULL, official_kbli_code TEXT
+);
+CREATE TABLE data_sources(
+    source_id TEXT PRIMARY KEY, title TEXT NOT NULL, publisher TEXT NOT NULL,
+    edition TEXT, uri TEXT, kind TEXT NOT NULL, license_note TEXT
+);
+CREATE TABLE occupations(
+    occupation_id TEXT PRIMARY KEY, preferred_name_id TEXT NOT NULL,
+    alternative_names TEXT NOT NULL DEFAULT '',
+    sector_id TEXT NOT NULL REFERENCES sectors(sector_id), description_id TEXT,
+    source_id TEXT NOT NULL REFERENCES data_sources(source_id),
+    record_status TEXT NOT NULL CHECK(record_status IN ('draft','reviewed','published','archived')),
+    last_reviewed TEXT, UNIQUE(preferred_name_id, sector_id)
+);
+CREATE TABLE occupation_aliases(
+    alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    occupation_id TEXT NOT NULL REFERENCES occupations(occupation_id) ON DELETE CASCADE,
+    alternative_name_id TEXT NOT NULL,
+    UNIQUE(occupation_id, alternative_name_id)
+);
+CREATE TABLE kbji_mappings(
+    occupation_id TEXT NOT NULL REFERENCES occupations(occupation_id),
+    kbji_edition TEXT NOT NULL, kbji_code TEXT NOT NULL, kbji_label_id TEXT NOT NULL,
+    source_id TEXT NOT NULL REFERENCES data_sources(source_id),
+    verified_by TEXT NOT NULL, verified_at TEXT NOT NULL,
+    PRIMARY KEY(occupation_id,kbji_edition,kbji_code)
+);
+CREATE TABLE employment_contexts(
+    context_code TEXT PRIMARY KEY,label_id TEXT NOT NULL,dimension TEXT NOT NULL
+);
+CREATE TABLE job_titles(
+    title_id TEXT PRIMARY KEY,title_name_id TEXT NOT NULL,
+    occupation_id TEXT NOT NULL REFERENCES occupations(occupation_id),
+    seniority_level TEXT, context_code TEXT REFERENCES employment_contexts(context_code),notes TEXT
+);
+CREATE INDEX ix_occupation_sector ON occupations(sector_id);
+CREATE INDEX ix_occupation_name ON occupations(preferred_name_id);
+CREATE INDEX ix_kbji_mapping_code ON kbji_mappings(kbji_edition,kbji_code);
+'''
+
+TABLES = (
+    ('sectors', 'data/reference/sectors.csv'),
+    ('data_sources', 'data/sources.csv'),
+    ('occupations', 'data/occupations.csv'),
+    ('employment_contexts', 'data/reference/employment_contexts.csv'),
+    ('job_titles', 'data/job_titles.csv'),
+    ('kbji_mappings', 'data/kbji_mappings.csv'),
+)
+
+# Identifiers are fixed; never interpolate unexpected CSV headers as SQL.
+from catalog_tables import COLUMNS
+
+
+def build(db_path: Path, root=ROOT):
+    errors, stats = check(root)
+    if errors:
+        raise ValueError('Dataset invalid:\n' + '\n'.join(errors))
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
     try:
-        con.execute('PRAGMA foreign_keys = ON')
-        con.executescript('''
-        CREATE TABLE sectors(sector_id TEXT PRIMARY KEY, sector_name TEXT NOT NULL, sector_type TEXT NOT NULL, official_kbli_code TEXT);
-        CREATE TABLE sources(source_id TEXT PRIMARY KEY, title TEXT NOT NULL, publisher TEXT NOT NULL, edition TEXT, uri TEXT, kind TEXT NOT NULL, license_note TEXT);
-        CREATE TABLE occupations(occupation_id TEXT PRIMARY KEY, preferred_name_id TEXT NOT NULL UNIQUE, alternative_names TEXT, sector_id TEXT NOT NULL REFERENCES sectors(sector_id), description_id TEXT, source_id TEXT NOT NULL REFERENCES sources(source_id), record_status TEXT NOT NULL, last_reviewed TEXT);
-        CREATE TABLE kbji_mappings(occupation_id TEXT NOT NULL REFERENCES occupations(occupation_id), kbji_edition TEXT NOT NULL, kbji_code TEXT NOT NULL, kbji_label_id TEXT NOT NULL, source_id TEXT NOT NULL REFERENCES sources(source_id), verified_by TEXT NOT NULL, verified_at TEXT NOT NULL, PRIMARY KEY(occupation_id,kbji_edition,kbji_code));
-        CREATE TABLE employment_contexts(context_code TEXT PRIMARY KEY,label_id TEXT NOT NULL,dimension TEXT NOT NULL);
-        CREATE TABLE job_titles(title_id TEXT PRIMARY KEY,title_name_id TEXT NOT NULL,occupation_id TEXT NOT NULL REFERENCES occupations(occupation_id),seniority_level TEXT,context_code TEXT REFERENCES employment_contexts(context_code),notes TEXT);
-        CREATE INDEX ix_occupation_sector ON occupations(sector_id);
-        CREATE INDEX ix_kbji_mapping_code ON kbji_mappings(kbji_edition,kbji_code);
-        ''')
-        tables=[
-          ('sectors',root/'data/reference/sectors.csv'),
-          ('sources',root/'data/sources.csv'),
-          ('occupations',root/'data/occupations.csv'),
-          ('employment_contexts',root/'data/reference/employment_contexts.csv'),
-          ('job_titles',root/'data/job_titles.csv'),
-          ('kbji_mappings',root/'data/kbji_mappings.csv'),
-        ]
-        for table,file in tables:
-            rows=read_csv(file)
-            if not rows: continue
-            cols=list(rows[0])
-            placeholders=','.join('?' for _ in cols)
-            con.executemany(f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})',[[r[c] for c in cols] for r in rows])
-        # FTS is optional in some SQLite builds; fallback to LIKE in search.py.
+        with tempfile.NamedTemporaryFile(prefix='.nor-id-', suffix='.sqlite3',
+                                         dir=db_path.parent, delete=False) as handle:
+            temporary = Path(handle.name)
+        con = sqlite3.connect(temporary)
         try:
-            con.executescript('''
-            CREATE VIRTUAL TABLE occupations_fts USING fts5(preferred_name_id,alternative_names,content=occupations,content_rowid=rowid);
-            INSERT INTO occupations_fts(occupations_fts) VALUES('rebuild');
-            ''')
-        except sqlite3.OperationalError:
-            pass
-        con.commit()
+            con.executescript(SCHEMA)
+            for table, filename in TABLES:
+                rows = read_csv(root / filename)
+                if not rows:
+                    continue
+                cols = COLUMNS[table]
+                if set(rows[0]) != set(cols):
+                    raise ValueError(f"Unexpected CSV columns for {table}")
+                placeholders = ','.join('?' for _ in cols)
+                con.executemany(f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})',
+                                [tuple(r[c] for c in cols) for r in rows])
+            aliases = [(r['occupation_id'], alias.strip())
+                       for r in read_csv(root / 'data/occupations.csv')
+                       for alias in r['alternative_names'].split('|') if alias.strip()]
+            con.executemany('''INSERT INTO occupation_aliases
+                (occupation_id,alternative_name_id) VALUES (?,?)''', aliases)
+            # FTS5 is an optional optimization; LIKE search works without it.
+            try:
+                con.executescript('''
+                    CREATE VIRTUAL TABLE occupations_fts USING fts5(
+                        preferred_name_id,alternative_names,content=occupations,content_rowid=rowid);
+                    INSERT INTO occupations_fts(occupations_fts) VALUES('rebuild');
+                ''')
+            except sqlite3.OperationalError:
+                pass
+            if con.execute('PRAGMA foreign_key_check').fetchall():
+                raise ValueError('SQLite foreign key validation failed')
+            con.commit()
+        finally:
+            con.close()
+        os.replace(temporary, db_path)
+        temporary = None
     finally:
-        con.close()
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return stats
 
 
 def main():
-    p=argparse.ArgumentParser()
-    p.add_argument('--output',type=Path,default=ROOT/'dist/pekerjaan-indonesia.sqlite3')
-    args=p.parse_args()
-    stats=build(args.output)
-    print(json.dumps({'database':str(args.output),**stats},ensure_ascii=False))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', type=Path, default=ROOT/'dist/pekerjaan-indonesia.sqlite3')
+    args = parser.parse_args()
+    stats = build(args.output)
+    print(json.dumps({'database': str(args.output), **stats}, ensure_ascii=False))
 
-if __name__=='__main__':main()
+
+if __name__ == '__main__':
+    main()

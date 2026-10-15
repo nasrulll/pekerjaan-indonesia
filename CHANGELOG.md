@@ -1,9 +1,14 @@
 # Changelog
 
-## 0.1.0 — 2026-10-15
+## v0.2.0 — 2026-10-15 — Multiplatform data + REST API
 
-- Repositori Git awal untuk katalog pekerjaan Indonesia.
-- 811 judul pekerjaan kurasi, 39 sektor editorial, 10 kelompok besar klasifikasi KBJI sebagai referensi.
-- Memisahkan mapping KBJI resmi (masih kosong) dari kurasi judul.
-- Pencarian lokal SQLite, ekspor JSON, validasi serta pengujian otomatis.
-- SQL PostgreSQL, dokumentasi kontribusi, provenance dan roadmap.
+- Menambahkan FastAPI REST v1 berbasis SQLAlchemy, OpenAPI, health check, pencarian, filter, pagination, data sektor/jabatan/konteks, kode KBJI terverifikasi, serta ekspor JSON dan CSV.
+- Menambahkan PostgreSQL UPSERT transaksional dengan `--apply` eksplisit, dan paritas kolom `alternative_names` pada skema.
+- Memperkuat SQLite: build atomik, validasi FK, tabel alias relasional; mempertahankan dukungan pencarian CLI.
+- Menambahkan builder snapshot SQLite/JSON/CSV dan manifest SHA-256; Dockerfile, Compose, contoh konfigurasi, dokumentasi dan tes API.
+- Menjaga 811 entri tetap `draft`, dan mapping kode KBJI resmi tetap kosong sampai proses verifikasi.
+
+## v0.1.0 — 2026-10-15 — Bootstrap awal
+
+- Katalog kurasi 811 pekerjaan, 39 sektor editorial, 10 kelompok mayor KBJI.
+- CSV + skema awal PostgreSQL + builder SQLite, JSON, validator, test, GitHub Actions.

@@ -1,45 +1,38 @@
-# Roadmap Pengembangan
+# Roadmap Pekerjaan Indonesia
 
-## P0 — Fondasi repositori (tersedia di v0.1.0)
+## P0 — Fondasi Git (v0.1.0, selesai)
 
-- [x] Taksonomi 39 sektor editorial
-- [x] 811 judul pekerjaan kurasi awal
-- [x] Kamus data dan model PostgreSQL
-- [x] Validasi CSV, pengujian, dan GitHub Actions
-- [x] Ekspor JSON, pencarian SQLite lokal
-- [x] Kebijakan provenance dan mencegah kode KBJI palsu
+- [x] 811 judul pekerjaan awal, 39 sektor editorial, 10 kelompok mayor KBJI
+- [x] CSV master, ID stabil, kamus data, kebijakan sumber, validasi dan CI
+- [x] Skema PostgreSQL awal, SQLite lokal dan ekspor JSON
 
-## P1 — Sinkronisasi sumber resmi (belum dikerjakan)
+## P1 — Multiplatform (v0.2.0, implementasi tersedia)
 
-- [ ] Identifikasi edisi KBJI resmi terbaru, izin distribusi, dan salinan sumber
-- [ ] Impor seluruh kode, nama, deskripsi dan tingkatan klasifikasi **yang diizinkan**
-- [ ] Rekonsiliasi 811 nama awal vs kode KBJI
-- [ ] Review silang minimal dua pemeriksa untuk mapping ambigu
-- [ ] Persentase kelengkapan per kelompok mayor dan kode sumber
-- [ ] Dokumentasi istilah yang tidak terpetakan/duplikat
+- [x] REST API baca-saja (`/v1/occupations`, detail, sektor, jabatan, konteks, KBJI verified only)
+- [x] SQLite offline, JSON/CSV, manifest checksum dan release builder
+- [x] PostgreSQL upsert loader, Docker Compose, dokumen deployment
+- [x] API test SQLite otomatis dan dukungan OpenAPI
+- [ ] Jalankan end-to-end PostgreSQL + Docker pada server nyata, integrasikan ke CI
+- [ ] Pengelolaan akun reviewer/editor dan migrasi skema produksi berurutan
+- [ ] Penanganan data usang saat penghapusan di Git, snapshot version provenance
 
-## P2 — Jabatan dan spesialisasi (belum dikerjakan)
+## P2 — Sinkronisasi sumber KBJI resmi (belum dikerjakan)
 
-- [ ] Jabatan struktural, fungsional, pelaksana ASN dengan sumber/edisi regulasi
-- [ ] Profesi spesialis/subspesialis serta izin/sertifikasi yang dipersyaratkan
-- [ ] Pekerjaan formal, informal, dan lintas sektor
-- [ ] Sinonim, nomenklatur regional, multibahasa
-- [ ] Riwayat perubahan nama dan kode
+- [ ] Verifikasi edisi KBJI, izin distribusi, dan sumber pemerintah terkini
+- [ ] Impor kode, nama, deskripsi dan hierarki yang boleh didistribusikan
+- [ ] Rekonsiliasi judul awal dan mapping resmi dengan reviewer manusia
+- [ ] Perhitungan kelengkapan per kelompok dan daftar konflik/duplikat
 
-## P3 — API dan integrasi (belum dikerjakan)
+## P3 — Nomenklatur ASN dan profesi (belum dikerjakan)
 
-- [ ] API `/v1/occupations`, `/v1/occupations/{id}`, `/v1/kbji/codes`, `/v1/job-titles`
-- [ ] Fuzzy search, autocomplete, indeks Bahasa Indonesia
-- [ ] Hak akses admin/editor/reviewer; event audit log
-- [ ] Snapshot dataset dan semantic versioning
-- [ ] PostgreSQL ingestion otomatis dan migrasi
+- [ ] Jabatan struktural, fungsional, pelaksana ASN dan sumber regulasi
+- [ ] Spesialisasi, subspesialisasi, lisensi profesi, sinonim dan riwayat perubahan
+- [ ] Sistem sinkronisasi untuk HRIS/SKPGen, mapping regulasi yang diaudit
 
-## P4 — Aplikasi penggunaan (belum dikerjakan)
+## P4 — Skala dan pengalaman (belum dikerjakan)
 
-- [ ] SKPGen AI: jabatan → contoh RHK/indikator berbasis regulasi yang diverifikasi
-- [ ] Referensi data untuk HRIS, lowongan kerja, career guidance
-- [ ] API kompatibel untuk sinkronisasi pihak ketiga
+- [ ] Fuzzy search, autocomplete, multilanguage, ranking dan indeks produksi
+- [ ] Versi dataset dan webhook/snapshot untuk konsumen API
+- [ ] Rate limits di gateway, observability, API keys jika diperlukan
 
-## Definisi selesai untuk tujuan `seluruh pekerjaan`
-
-**Bukan jumlah absolut sewenang-wenang.** Cakupan penuh dinilai berdasarkan audit terhadap seluruh unit dan hierarki KBJI edisi rujukan yang ditetapkan, kesesuaian kode-label, serta daftar profesi lokal/spesialisasi yang punya sumber pendukung. Sebelum terpenuhi, gunakan istilah *katalog dalam pengembangan*.
+**Definisi selesai untuk klaim `seluruh pekerjaan`:** audit seluruh klasifikasi pada edisi KBJI rujukan dan rekonsiliasi nomenklatur lokal bersumber, bukan sekadar jumlah entri.

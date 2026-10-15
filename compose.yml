@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: norid
+      POSTGRES_DB: norid
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema/postgresql.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U norid -d norid"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  seed:
+    build: .
+    command: ["python", "scripts/load_postgres.py", "--apply"]
+    environment:
+      NOR_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      NOR_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
+      NOR_CORS_ORIGINS: ${NOR_CORS_ORIGINS:-}
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    restart: unless-stopped
+volumes:
+  pgdata:

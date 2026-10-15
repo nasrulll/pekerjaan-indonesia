@@ -1,86 +1,116 @@
 # Pekerjaan Indonesia / NOR-ID
 
-**Repositori Git untuk katalog nasional pekerjaan, profesi, spesialisasi, dan jabatan di Indonesia.**
+**Repositori open-data-ready untuk katalog pekerjaan Indonesia: Git + PostgreSQL + SQLite + REST API + JSON/CSV.**
 
-> **Status: starter v0.1.0, bukan referensi resmi pemerintah.** Repositori ini saat pertama dibuat memiliki **811 judul pekerjaan awal dalam 39 sektor editorial**. Seluruh entri pekerjaan masih `draft`; **belum ada kode KBJI individu yang diklaim sudah diverifikasi**. Jumlah pekerjaan di Indonesia tidak dibatasi pada 811: cakupan lengkap baru dapat diklaim setelah rekonsiliasi dengan sumber resmi KBJI dan pemeriksaan profesi/spesialisasi lokal.
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 
-## Prinsip dasar
+> **Penting:** data v0.2.0 berisi **811 judul pekerjaan hasil kurasi dalam 39 sektor editorial**, seluruhnya `draft`. **Belum ada kode KBJI individu terverifikasi** dan repositori ini **bukan daftar resmi seluruh pekerjaan di Indonesia**. Cakupan lengkap harus direkonsiliasi dengan publikasi KBJI resmi dan sumber regulasi kompeten, dengan menghormati lisensi.
 
-1. **Pekerjaan ≠ jabatan organisasi ≠ status kepegawaian ≠ bidang usaha.** Contoh: "perawat" adalah pekerjaan; "kepala ruang" adalah jabatan; "PNS/PPPK/swasta" adalah konteks kepegawaian; KBLI mengklasifikasikan kegiatan usaha.
-2. **KBJI** adalah acuan klasifikasi pekerjaan. **KBLI** digunakan hanya jika diperlukan untuk hubungan bidang usaha. Jangan mengarang kode KBJI atau menganggap 39 sektor editorial sama dengan taksonomi resmi.
-3. Kode resmi ditambahkan melalui `data/kbji_mappings.csv` dengan *edisi, kode, label sumber, ID sumber, pemeriksa, dan tanggal verifikasi*.
-4. **ID internal stabil** (`ID-OCC-000001` dst.), tidak berubah ketika nama/label disesuaikan. Jangan gunakan nomor baris sebagai ID.
-5. Semua perubahan bisa diaudit lewat Git: *pull request*, *review*, dan *CI*.
-6. Sumber resmi eksternal tetap tunduk pada syarat lisensi masing-masing; jangan menyalin keseluruhan publikasi tanpa memastikan hak penggunaannya.
+## Status implementasi
 
-## Struktur
+| Komponen | Kondisi |
+|---|---|
+| Master katalog Git/CSV, provenance & governance | Tersedia |
+| PostgreSQL skema + loader UPSERT transaksional | Implementasi tersedia; uji DB riil masih diperlukan |
+| SQLite offline, dibangun atomik | Teruji |
+| REST API FastAPI + OpenAPI (read-only) | Teruji dengan SQLite |
+| JSON/CSV + SHA-256 manifest | Teruji |
+| Docker Compose PostgreSQL + seed + API | Konfigurasi tersedia; uji Docker riil masih diperlukan |
+| KBJI resmi lengkap & verifikasi | Belum tersedia (0 mapping) |
+
+## Diagram arsitektur
 
 ```text
-pekerjaan-indonesia/
-├── .github/workflows/ci.yml          # validasi otomatis di setiap PR
-├── data/
-│   ├── occupations.csv              # 811 judul pekerjaan, draft kurasi
-│   ├── kbji_mappings.csv            # kosong sampai verifikasi resmi
-│   ├── job_titles.csv               # contoh jabatan & jenjang
-│   ├── sources.csv                  # provenance sumber
-│   └── reference/
-│       ├── sectors.csv              # 39 sektor editorial
-│       ├── kbji_major_groups.csv    # 10 kelompok utama
-│       └── employment_contexts.csv  # PNS, PPPK, BUMN, swasta, dll.
-├── docs/
-│   ├── DATA_DICTIONARY.md
-│   ├── SOURCE_POLICY.md
-│   ├── ROADMAP.md
-│   └── INTEGRATION_SKPGEN.md
-├── schema/
-│   ├── postgresql.sql               # model database produksi
-│   └── occupation.schema.json
-├── scripts/
-│   ├── validate.py
-│   ├── build_sqlite.py
-│   ├── search.py
-│   └── export_json.py
-├── templates/kbji_mapping_template.csv
-└── tests/test_catalog.py
+Git / data/*.csv (sumber data kanonik; review & CI)
+                 |
+         scripts/validate.py
+                 |
+         +-------+-----------+
+         |                   |
+  build_release.py     load_postgres.py --apply
+         |                   |
+    SQLite+JSON+CSV      PostgreSQL produksi
+         |                   |
+         +-----> REST API <---+
+                    |
+         Web / Mobile / SKPGen / HRIS
 ```
 
-## Cara cepat menjalankan (Python 3.10+ tanpa dependensi eksternal)
+## Instalasi cepat (lokal/offline)
+
+Python 3.10+ diperlukan.
 
 ```bash
+python -m pip install -e '.[server,test]'
 python scripts/validate.py
 python -m unittest discover -s tests -v
-python scripts/build_sqlite.py
-python scripts/search.py "guru"
-python scripts/search.py "dokter" --sector kesehatan --limit 15
-python scripts/export_json.py
+python scripts/build_release.py
+python scripts/search.py 'guru'
+uvicorn nor_id.api:app --host 127.0.0.1 --port 8000
 ```
 
-Hasil build lokal (tidak masuk Git) ada di `dist/pekerjaan-indonesia.sqlite3` dan `dist/occupations.json`. `schema/postgresql.sql` adalah skema produksi awal dan **tidak otomatis diisi oleh pembangun SQLite**; ingestion PostgreSQL merupakan pekerjaan lanjutan.
+Dokumentasi REST interaktif tersedia di `http://127.0.0.1:8000/docs` dan contoh pencarian pada `/v1/occupations?q=perawat`. Snapshot hasil build disimpan dalam `dist/` (diabaikan oleh Git).
 
-## Membuat repositori GitHub
+## PostgreSQL + Docker
 
 ```bash
-git init
-
-git add .
-git commit -m "feat: bootstrap katalog pekerjaan Indonesia v0.1.0"
-# Buat repository kosong di GitHub terlebih dahulu, misalnya pekerjaan-indonesia
-# Ganti OWNER dengan akun/organisasi GitHub Anda.
-git branch -M main
-git remote add origin https://github.com/OWNER/pekerjaan-indonesia.git
-git push -u origin main
+cp .env.example .env
+# Ganti POSTGRES_PASSWORD dahulu
+# Perlu Docker/Compose berjalan:
+docker compose up --build -d
 ```
 
-> Untuk arsip yang sudah memiliki riwayat Git, pengguna dapat menjalankan `git clone pekerjaan-indonesia.git.bundle pekerjaan-indonesia` dari berkas bundle yang disediakan. Nama `OWNER` hanya contoh dan belum menunjuk repositori aktif.
+Docker API hanya diekspos pada `127.0.0.1:8000` untuk penggunaan lokal. Baca [panduan deployment](docs/DEPLOYMENT.md) sebelum mengaksesnya dari jaringan publik. Tanpa Docker gunakan `schema/postgresql.sql` dan `scripts/load_postgres.py` sesuai panduan.
 
-## Kriteria data terverifikasi
+## API tersedia
 
-- Satu entri terhubung ke sumber asli dan edisi resmi yang teridentifikasi.
-- Pemetaannya ditinjau oleh manusia; sekadar nama mirip belum berarti klasifikasi benar.
-- Kode angka disimpan sebagai **teks** untuk mempertahankan angka nol di depan.
-- Status `published` hanya setelah QA, pemeriksaan duplikat, istilah dan perubahan versi.
-- Crosswalk dari satu edisi KBJI ke edisi lain disimpan sebagai mapping baru, bukan overwrite.
+| Endpoint | Tujuan |
+|---|---|
+| `/v1/meta` | Status dataset dan kode resmi terverifikasi |
+| `/v1/sectors` | Daftar sektor editorial |
+| `/v1/occupations?q=...` | Pencarian, filter, pagination |
+| `/v1/occupations/{id}` | Detail pekerjaan dan jabatan |
+| `/v1/job-titles` | Jabatan organisasi |
+| `/v1/employment-contexts` | Konteks kerja |
+| `/v1/kbji/codes` | Kode dari mapping yang diverifikasi saja |
+| `/v1/exports/occupations.json` | Unduh JSON |
+| `/v1/exports/occupations.csv` | Unduh CSV |
+| `/healthz`, `/docs`, `/openapi.json` | Health, Swagger, kontrak API |
 
-## Kontribusi
+[Lihat kontrak API lengkap](docs/API.md).
 
-Lihat [CONTRIBUTING.md](CONTRIBUTING.md), [kamus data](docs/DATA_DICTIONARY.md), [kebijakan sumber](docs/SOURCE_POLICY.md), dan [roadmap](docs/ROADMAP.md).
+## Struktur repositori
+
+```text
+.github/workflows/ci.yml           # validasi dan artefak otomatis
+nor_id/api.py                      # FastAPI read-only, SQLite/PostgreSQL
+schema/postgresql.sql             # model relasional produksi
+data/                             # CSV kanonik, sumber, referensi
+scripts/build_sqlite.py           # SQLite offline atomik
+scripts/load_postgres.py          # loader PostgreSQL transaksional
+scripts/build_release.py          # snapshot CSV/JSON/SQLite + hash
+scripts/validate.py               # validasi pekerjaan & kode KBJI
+scripts/search.py                 # pencarian SQLite CLI
+scripts/export_json.py            # JSON offline
+tests/                            # test katalog dan integrasi API
+docs/                             # panduan arsitektur dan integrasi
+Dockerfile, compose.yml           # pengembangan berbasis kontainer
+pyproject.toml                    # paket Python + dependensi opsional
+```
+
+## Prinsip data dan lisensi
+
+Pekerjaan ≠ jabatan organisasi ≠ status kepegawaian ≠ bidang usaha. **KBJI** adalah klasifikasi pekerjaan; **KBLI** klasifikasi kegiatan usaha. `occupation_id` adalah identifier internal stabil, tidak sama dengan kode KBJI; kode KBJI hanya boleh ditambahkan dengan edisi, sumber, tanggal dan verifikator. Jangan mengklaim 39 sektor sebagai klasifikasi resmi. Proyek ini tidak memuat data pribadi, NIK, atau data kepegawaian individu.
+
+Kode proyek berlisensi MIT. Data resmi eksternal hanya dapat diimpor dan didistribusikan sesuai hak/lisensi sumber masing-masing. Lihat [kebijakan sumber](docs/SOURCE_POLICY.md) dan [panduan kontribusi](CONTRIBUTING.md).
+
+## Dokumen lain
+
+- [Arsitektur multiplatform](docs/ARCHITECTURE.md)
+- [Deployment / Docker / PostgreSQL](docs/DEPLOYMENT.md)
+- [Integrasi SKPGen](docs/INTEGRATION_SKPGEN.md)
+- [Kamus data](docs/DATA_DICTIONARY.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Perubahan](CHANGELOG.md)
+
+Repositori dibuat **secara lokal**; publikasi ke akun/organisasi GitHub tertentu memerlukan penentuan pemilik remote. Arsip Git Bundle dapat dikloning tanpa kehilangan commit.

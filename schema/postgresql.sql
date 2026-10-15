@@ -1,4 +1,4 @@
--- NOR-ID / Pekerjaan Indonesia - PostgreSQL schema draft v0.1
+-- NOR-ID / Pekerjaan Indonesia - PostgreSQL schema v0.2
 -- Official KBJI/KBLI codes are stored only when source verified.
 BEGIN;
 CREATE TABLE IF NOT EXISTS data_sources (
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS sectors (
 CREATE TABLE IF NOT EXISTS occupations (
   occupation_id text PRIMARY KEY CHECK (occupation_id ~ '^ID-OCC-[0-9]{6}$'),
   preferred_name_id text NOT NULL,
+  alternative_names text NOT NULL DEFAULT '',
   sector_id text NOT NULL REFERENCES sectors(sector_id),
   description_id text,
   source_id text NOT NULL REFERENCES data_sources(source_id),
@@ -30,6 +31,9 @@ CREATE TABLE IF NOT EXISTS occupations (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(preferred_name_id,sector_id)
 );
+
+-- Allow upgrading a database initialized with the v0.1 schema.
+ALTER TABLE occupations ADD COLUMN IF NOT EXISTS alternative_names text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS occupation_aliases (
   alias_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -74,6 +78,7 @@ CREATE TABLE IF NOT EXISTS occupation_reviews (
   reviewed_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS ix_occupation_name ON occupations(preferred_name_id);
 CREATE INDEX IF NOT EXISTS ix_occupation_sector ON occupations(sector_id);
 CREATE INDEX IF NOT EXISTS ix_occupation_status ON occupations(record_status);
 CREATE INDEX IF NOT EXISTS ix_kbji_code ON kbji_mappings(kbji_edition,kbji_code);
