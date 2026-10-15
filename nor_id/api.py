@@ -261,6 +261,8 @@ def build_app(url: str | None = None) -> FastAPI:
     pasang_rute(app, db, escaped_like, paginate, occupation_rows)
     from .fitur_lanjutan import pasang_fitur
     pasang_fitur(app, db, paginate)
+    from .api_terverifikasi import pasang_rute_terverifikasi
+    pasang_rute_terverifikasi(app, db)
     return app
 
 
