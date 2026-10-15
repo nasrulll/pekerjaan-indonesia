@@ -5,6 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from nor_id.basis_data import periksa_url
 from nor_id.skema_portabel import metadata
+from nor_id.skema_histori import metadata_histori
 
 config=context.config
 url=os.environ.get('RPI_DATABASE_URL')
@@ -14,7 +15,7 @@ periksa_url(url,periksa_berkas=False)
 config.set_main_option('sqlalchemy.url',url.replace('%','%%'))
 
 def offline():
-    context.configure(url=url,target_metadata=metadata,literal_binds=True,compare_type=True)
+    context.configure(url=url,target_metadata=[metadata, metadata_histori],literal_binds=True,compare_type=True)
     with context.begin_transaction(): context.run_migrations()
 
 def online():
