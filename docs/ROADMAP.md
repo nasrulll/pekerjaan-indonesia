@@ -9,11 +9,11 @@
 
 ## Pengembangan v0.5.0 — status terkini
 
-Alat audit nasional dan jalur **impor kandidat berstatus ditinjau** sudah di-merge untuk KBJI/wilayah. Impor kandidat UMP/UMK sedang dikembangkan dalam PR ini; dataset resmi tetap belum tersedia:
+Alat audit nasional, jalur **impor kandidat berstatus ditinjau** untuk KBJI/wilayah/UMP-UMK (PR #15–#17), dan gerbang integritas lintas tabel (PR #18) sudah digabungkan. API historis fail-closed dikerjakan pada PR #19. Dataset resmi tetap belum tersedia:
 
 - **KBJI (#1):** validator manifest, audit kode/edisi/hierarki, calon pemetaan nama, tabel taksonomi historis dan importer kandidat dengan persetujuan manusia (PR #15). [Panduan KBJI](ALUR_AUDIT_KBJI.md).
 - **Wilayah (#2):** audit sistem kode/edisi/relasi induk serta importer kandidat atomik dan idempoten (PR #16). [Panduan wilayah](ALUR_AUDIT_WILAYAH.md).
-- **UMP/UMK (#3):** audit keputusan, tanggal, nominal, rantai revisi dan usulan importer kandidat historis dalam PR #17; bukan statistik rata-rata. [Panduan upah](ALUR_AUDIT_UPAH_MINIMUM.md).
+- **UMP/UMK (#3):** audit keputusan, tanggal, nominal, rantai revisi dan importer kandidat historis sudah digabung dalam PR #17; bukan statistik rata-rata. [Panduan upah](ALUR_AUDIT_UPAH_MINIMUM.md).
 
 Semua menggunakan data sintetis pada pengujian. **0 kode KBJI terverifikasi, 0 wilayah resmi terverifikasi, 0 data UMP/UMK terverifikasi**. Penambahan data resmi memerlukan izin redistribusi, sumber primer, pemeriksaan edisi, dan persetujuan manusia.
 
