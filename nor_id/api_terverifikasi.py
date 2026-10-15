@@ -126,7 +126,7 @@ def pasang_rute_terverifikasi(app: FastAPI, ambil_db):
             s.c.rujukan_izin.label("rujukan_izin"),
         ]
         with ambil_db(request).connect() as conn:
-            butuh_skema(conn, [k.name, s.name])
+            butuh_skema(conn, [taksonomi_kbji.name, sumber.name])
             return query_hal(conn, from_, fields, syarat, [k.c.edisi, k.c.kode], batas, mulai)
 
     @app.get("/v1/wilayah-historis/terverifikasi", tags=["data historis terverifikasi"])
@@ -176,7 +176,7 @@ def pasang_rute_terverifikasi(app: FastAPI, ambil_db):
                   w.c.jenis_wilayah, w.c.kode_induk, w.c.id_sumber,
                   s.c.penerbit.label("penerbit"), s.c.url_resmi.label("url_sumber")]
         with ambil_db(request).connect() as conn:
-            butuh_skema(conn, [w.name, s.name])
+            butuh_skema(conn, [wilayah.name, sumber.name])
             return query_hal(
                 conn, from_, fields, syarat,
                 [w.c.sistem_kode, w.c.edisi, w.c.kode_wilayah], batas, mulai
@@ -264,7 +264,7 @@ def pasang_rute_terverifikasi(app: FastAPI, ambil_db):
             s.c.url_resmi.label("url_sumber"), s.c.rujukan_izin.label("rujukan_izin"),
         ]
         with ambil_db(request).connect() as conn:
-            butuh_skema(conn, [d.name, s.name, wilayah.name])
+            butuh_skema(conn, [keputusan.name, sumber.name, wilayah.name])
             return query_hal(
                 conn, from_, fields, syarat,
                 [d.c.tahun.desc(), d.c.sistem_kode, d.c.kode_wilayah, d.c.id_keputusan],
