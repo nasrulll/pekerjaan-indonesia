@@ -74,3 +74,21 @@ Rute lama di atas dipertahankan agar integrasi v0.2 tidak rusak. Nama baru terse
 Parameter baru memakai nama Bahasa Indonesia (`nama`, `batas`, `mulai`, `tahun`, `kode_wilayah`, `sistem_kode`, `metrik`, `id_pekerjaan`). Kode rute API `/v1/pekerjaan` mengeluarkan `nama_pekerjaan`, `id_pekerjaan`, `id_sektor`, `status_data`. Endpoint pengupahan hanya menampilkan data **terverifikasi**, dengan `data_tersedia=false` jika kosong. Selalu bedakan UMP/UMK dari rata-rata/median upah, serta data resmi, survei dan estimasi.
 
 Seluruh kontrak baru terlihat pada OpenAPI `/docs`. Lihat [panduan v0.3](PENGEMBANGAN_V03.md).
+
+## Pengembangan v0.5: API historis dengan gerbang publikasi
+
+Endpoint baca-saja terpisah untuk tabel berversi:
+
+- \`GET /v1/kbji/terverifikasi\` — kode KBJI per edisi.
+- \`GET /v1/wilayah-historis/terverifikasi\` — wilayah menurut sistem kode dan edisi.
+- \`GET /v1/upah-minimum-historis/terverifikasi\` — keputusan UMP/UMK yang berlaku per tahun, bukan rata-rata upah.
+
+**Secara bawaan semua endpoint baru tertutup dan mengembalikan daftar kosong.**
+Aktivasi memerlukan persetujuan operator terhadap sumber yang telah
+diperiksa di luar aplikasi serta pengaturan \`RPI_PUBLIKASI_HISTORIS=aktif\`
+dan \`RPI_SUMBER_DISETUJUI_PUBLIK\`.
+Status \`draf\`/\`ditinjau\` dan sumber beridentitas \`KANDIDAT-\` selalu
+ditolak. Jangan gunakan konfigurasi aktivasi sebelum sumber resmi dan
+hak penggunaan ulang dikonfirmasi secara independen.
+
+Detail batasan, metadata, dan penggunaan: [API Historis Terverifikasi](API_HISTORIS_TERVERIFIKASI.md).
