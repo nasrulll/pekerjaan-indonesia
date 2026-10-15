@@ -56,3 +56,8 @@ Ubah sumber Git CSV melalui Pull Request, verifikasi provenance dan lisensi, jal
 - [ ] TLS/reverse proxy, rate limit, firewall dan pembatasan CORS
 - [ ] Audit perubahan data resmi melalui PR
 - [ ] Log, alert, performance baseline dan health check
+
+
+## Migrasi kompatibilitas ke RPI v0.3.0
+
+Untuk instalasi lama versi 0.2, jalankan `schema/postgresql_tambahan.sql` pada basis data lama sebelum memulai loader atau API 0.3. `schema/postgresql.sql` sudah mencakup semua tabel untuk instalasi baru. Variabel `RPI_DATABASE_URL` diprioritaskan; `NOR_DATABASE_URL` tetap diterima. Docker volume lama tidak otomatis menjalankan skrip inisialisasi ulang. Data wilayah dan pengupahan tetap kosong sampai divalidasi dan diimpor secara resmi.

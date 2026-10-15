@@ -1,0 +1,4 @@
+id_jabatan,nama_jabatan,id_pekerjaan,jenis_jabatan,id_jabatan_induk,jenjang,kode_konteks,sumber_id,status_verifikasi,tanggal_verifikasi,catatan
+JBT-000001,Kepala Sekolah,ID-OCC-000108,organisasi,,lead,YAYASAN,CURATED-BOOTSTRAP,draf,,Contoh dari katalog v0.2; bukan nomenklatur jabatan resmi
+JBT-000002,Kepala Toko,ID-OCC-000484,organisasi,,lead,SWASTA,CURATED-BOOTSTRAP,draf,,Contoh dari katalog v0.2; bukan nomenklatur jabatan resmi
+JBT-000003,Senior Backend Developer,ID-OCC-000200,organisasi,,senior,SWASTA,CURATED-BOOTSTRAP,draf,,Contoh dari katalog v0.2; bukan nomenklatur jabatan resmi

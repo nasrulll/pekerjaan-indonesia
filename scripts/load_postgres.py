@@ -22,6 +22,13 @@ TABLES = (
     ("employment_contexts", "reference/employment_contexts.csv", "context_code"),
     ("job_titles", "job_titles.csv", "title_id"),
     ("kbji_mappings", "kbji_mappings.csv", "occupation_id,kbji_edition,kbji_code"),
+    ("jabatan_nasional","jabatan_nasional.csv","id_jabatan"),
+    ("wilayah_administratif","wilayah_administratif.csv","sistem_kode,kode_wilayah"),
+    ("pemetaan_jabatan_kbji","pemetaan_jabatan_kbji.csv","id_jabatan,edisi_kbji,kode_kbji"),
+    ("kompetensi_jabatan","kompetensi_jabatan.csv","id_kompetensi"),
+    ("upah_minimum","upah_minimum.csv","id_upah"),
+    ("statistik_upah","statistik_upah.csv","id_statistik"),
+    ("kelas_gaji","kelas_gaji.csv","id_kelas_gaji"),
 )
 
 
@@ -32,6 +39,17 @@ def rows_for(table: str, location: Path) -> list[dict]:
             record["last_reviewed"] = date.fromisoformat(record["last_reviewed"]) if record["last_reviewed"] else None
         if table == "kbji_mappings":
             record["verified_at"] = date.fromisoformat(record["verified_at"])
+        if table in ('jabatan_nasional','wilayah_administratif','upah_minimum',
+                     'statistik_upah','kelas_gaji','pemetaan_jabatan_kbji','kompetensi_jabatan'):
+            # Typed PostgreSQL date/int columns with nullable CSV fields.
+            for k in ('tanggal_verifikasi','tanggal_mulai'):
+                if k in record and record[k]:
+                    record[k] = date.fromisoformat(record[k])
+            for k in ('tahun','nilai_rupiah','jumlah_sampel','nilai_dasar_rupiah'):
+                if k in record and record[k]:
+                    record[k] = int(record[k])
+            for k,v in record.items():
+                if v == '': record[k] = None
     return rows
 
 
@@ -71,6 +89,9 @@ def load(dsn: str, root: Path = ROOT) -> dict[str, int]:
                 cur.execute("SELECT to_regclass('public.occupations')")
                 if not cur.fetchone()[0]:
                     raise RuntimeError("Skema belum dibuat. Jalankan psql -f schema/postgresql.sql dahulu.")
+                cur.execute("SELECT to_regclass('public.jabatan_nasional')")
+                if not cur.fetchone()[0]:
+                    raise RuntimeError("Migrasi v0.3 belum terpasang. Jalankan schema/postgresql_tambahan.sql untuk database lama.")
                 for table, filename, keys in TABLES:
                     rows = rows_for(table, root / "data" / filename)
                     query, values = statements(table, rows, keys)
@@ -103,7 +124,7 @@ def main():
     if not args.apply:
         print("Dry run: tidak ada koneksi atau perubahan. Gunakan --apply untuk upsert PostgreSQL.")
         return
-    dsn = os.getenv("NOR_DATABASE_URL", "")
+    dsn = os.getenv("RPI_DATABASE_URL") or os.getenv("NOR_DATABASE_URL", "")
     print("Committed PostgreSQL upserts:", load(dsn, args.root))
     print("Catatan: penghapusan rekord lama tidak dilakukan otomatis. Audit perubahan untuk data usang.")
 

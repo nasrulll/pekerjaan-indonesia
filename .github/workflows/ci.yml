@@ -1,4 +1,4 @@
-name: Catalog API and data validation
+name: Validasi katalog nasional dan API
 on:
   push:
   pull_request:
@@ -21,9 +21,18 @@ jobs:
       - name: Publish multi-format artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nor-id-multiplatform
+          name: registri-pekerjaan-indonesia-multiplatform
           path: |
             dist/pekerjaan-indonesia.sqlite3
             dist/occupations.json
             dist/occupations.csv
+            dist/pekerjaan.csv
+            dist/pekerjaan.json
             dist/manifest.json
+            dist/jabatan_nasional.*
+            dist/wilayah_administratif.*
+            dist/upah_minimum.*
+            dist/statistik_upah.*
+            dist/kompetensi_jabatan.*
+            dist/kelas_gaji.*
+            dist/pemetaan_jabatan_kbji.*

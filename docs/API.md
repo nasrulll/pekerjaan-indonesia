@@ -66,3 +66,11 @@ Respons asli mungkin mengandung kolom lain; contoh ini hanya ilustrasi ringkas. 
 - Semua endpoint saat ini **read-only**. Tidak ada API untuk menulis data.
 - Versi kontrak URL adalah `v1`, versi rilis proyek `v0.2.0`. Perubahan breaking harus memperbarui versi URL.
 - Aplikasi Android/mobile dapat mengakses API secara langsung; aplikasi browser mengatur CORS melalui `NOR_CORS_ORIGINS`.
+
+## Pembaruan v0.3: rute berbahasa Indonesia
+
+Rute lama di atas dipertahankan agar integrasi v0.2 tidak rusak. Nama baru tersedia pada `/v1/pekerjaan`, `/v1/pekerjaan/{id_pekerjaan}`, `/v1/jabatan`, `/v1/wilayah`, `/v1/upah-minimum`, `/v1/statistik-upah`, dan `/v1/status-registri`.
+
+Parameter baru memakai nama Bahasa Indonesia (`nama`, `batas`, `mulai`, `tahun`, `kode_wilayah`, `sistem_kode`, `metrik`, `id_pekerjaan`). Kode rute API `/v1/pekerjaan` mengeluarkan `nama_pekerjaan`, `id_pekerjaan`, `id_sektor`, `status_data`. Endpoint pengupahan hanya menampilkan data **terverifikasi**, dengan `data_tersedia=false` jika kosong. Selalu bedakan UMP/UMK dari rata-rata/median upah, serta data resmi, survei dan estimasi.
+
+Seluruh kontrak baru terlihat pada OpenAPI `/docs`. Lihat [panduan v0.3](PENGEMBANGAN_V03.md).

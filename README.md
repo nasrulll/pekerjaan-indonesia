@@ -1,42 +1,38 @@
-# Pekerjaan Indonesia / NOR-ID
+# Registri Pekerjaan Indonesia (RPI)
 
-**Repositori open-data-ready untuk katalog pekerjaan Indonesia: Git + PostgreSQL + SQLite + REST API + JSON/CSV.**
+**Repositori Git terbuka untuk pekerjaan, jabatan, wilayah administratif, dan data pengupahan Indonesia.**
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+**Versi 0.3.0** — PostgreSQL (produksi), SQLite (offline), REST API, CSV dan JSON. **Seluruh modul, tabel baru, bidang dan endpoint baru menggunakan penamaan Bahasa Indonesia.** Paket lama `nor_id`, tabel sumber awal (`occupations`, `job_titles`), variabel `NOR_*` serta API lama tetap dipertahankan sebagai lapisan kompatibilitas v0.2.0.
 
-> **Penting:** data v0.2.0 berisi **811 judul pekerjaan hasil kurasi dalam 39 sektor editorial**, seluruhnya `draft`. **Belum ada kode KBJI individu terverifikasi** dan repositori ini **bukan daftar resmi seluruh pekerjaan di Indonesia**. Cakupan lengkap harus direkonsiliasi dengan publikasi KBJI resmi dan sumber regulasi kompeten, dengan menghormati lisensi.
+> **Peringatan tentang cakupan:** Dataset saat ini memiliki **811 pekerjaan kurasi/draf**, **39 sektor editorial**, **3 contoh jabatan draf**, dan **0 pemetaan kode KBJI yang telah diverifikasi**. Belum ada kode wilayah resmi maupun nominal UMP/UMK/statistik upah di master dataset. Ini **belum** merupakan katalog lengkap Indonesia atau sumber pengupahan resmi. Angka tahun atau gaji tidak boleh diciptakan sendiri.
 
-## Status implementasi
+## Modul
 
-| Komponen | Kondisi |
-|---|---|
-| Master katalog Git/CSV, provenance & governance | Tersedia |
-| PostgreSQL skema + loader UPSERT transaksional | Implementasi tersedia; uji DB riil masih diperlukan |
-| SQLite offline, dibangun atomik | Teruji |
-| REST API FastAPI + OpenAPI (read-only) | Teruji dengan SQLite |
-| JSON/CSV + SHA-256 manifest | Teruji |
-| Docker Compose PostgreSQL + seed + API | Konfigurasi tersedia; uji Docker riil masih diperlukan |
-| KBJI resmi lengkap & verifikasi | Belum tersedia (0 mapping) |
+| Modul | Kemampuan | Status |
+|---|---|---|
+| Katalog Pekerjaan Nasional | Pencarian 811 pekerjaan dan sektor editorial | Tersedia, data masih draf |
+| Katalog Jabatan Nasional | Relasi pekerjaan, jenjang, induk jabatan, dan konteks kerja | Struktur aktif; 3 contoh draf |
+| Referensi Wilayah Administratif | Kode wilayah per sistem, provinsi, kabupaten dan kota | Struktur dan API aktif; data 0 |
+| Statistik Pengupahan Daerah | UMP, UMK, rata-rata, median, cakupan, tahun, sumber | Struktur dan API aktif; data 0 |
+| Kompetensi dan Jenjang Karier | Kompetensi jabatan, kategori, jenjang, dan kelas gaji | Struktur aktif; data 0 |
+| Sinkronisasi Data Resmi | Validasi sumber, tanggal, verifikasi dan audit impor | Validasi tersedia; konektor otomatis belum dibuat |
+| Analisis Pekerjaan dan Penghasilan | Keluaran untuk visualisasi lintas wilayah/tahun | Struktur/API tersedia; dashboard belum dibuat |
 
-## Diagram arsitektur
+## Arsitektur singkat
 
 ```text
-Git / data/*.csv (sumber data kanonik; review & CI)
-                 |
-         scripts/validate.py
-                 |
-         +-------+-----------+
-         |                   |
-  build_release.py     load_postgres.py --apply
-         |                   |
-    SQLite+JSON+CSV      PostgreSQL produksi
-         |                   |
-         +-----> REST API <---+
-                    |
-         Web / Mobile / SKPGen / HRIS
+Git + CSV terkurasi (master)
+        │
+  Validasi dan review
+        ├──────────→ PostgreSQL (produksi)
+        ├──────────→ SQLite (offline)
+        ├──────────→ JSON / CSV + SHA-256
+        └──────────→ REST API / OpenAPI
+                           │
+                  Web / Mobile / SKPGen / HRIS
 ```
 
-## Instalasi cepat (lokal/offline)
+## Instalasi
 
 Python 3.10+ diperlukan.
 
@@ -45,72 +41,49 @@ python -m pip install -e '.[server,test]'
 python scripts/validate.py
 python -m unittest discover -s tests -v
 python scripts/build_release.py
-python scripts/search.py 'guru'
 uvicorn nor_id.api:app --host 127.0.0.1 --port 8000
 ```
 
-Dokumentasi REST interaktif tersedia di `http://127.0.0.1:8000/docs` dan contoh pencarian pada `/v1/occupations?q=perawat`. Snapshot hasil build disimpan dalam `dist/` (diabaikan oleh Git).
+Dokumentasi REST API tersedia di `http://127.0.0.1:8000/docs` jika server dijalankan. Nama modul dan endpoint baru menggunakan Bahasa Indonesia.
 
-## PostgreSQL + Docker
+## Endpoint REST baru
+
+| Endpoint | Fungsi |
+|---|---|
+| `GET /v1/status-registri` | Jumlah data yang terisi |
+| `GET /v1/pekerjaan?nama=perawat` | Pencarian pekerjaan; keluaran Bahasa Indonesia |
+| `GET /v1/pekerjaan/{id_pekerjaan}` | Detail pekerjaan |
+| `GET /v1/jabatan?nama=kepala` | Katalog dan hierarki jabatan |
+| `GET /v1/wilayah?jenis_wilayah=provinsi` | Wilayah yang sudah terverifikasi |
+| `GET /v1/upah-minimum?tahun=2026` | UMP/UMK terverifikasi |
+| `GET /v1/statistik-upah?tahun=2026` | Statistik upah terverifikasi |
+
+Endpoint v0.2 tetap berjalan, seperti `/v1/occupations`, `/v1/job-titles`, `/v1/meta` dan `/v1/exports/occupations.json`.
+
+**Nilai kosong tidak diganti nol.** Jika statistik belum tersedia API mengembalikan daftar kosong dengan penanda `data_tersedia=false`; daftar contoh dalam pengujian tidak masuk master dataset.
+
+## Migrasi PostgreSQL
+
+**Database baru:** berkas `schema/postgresql.sql` mencakup tabel v0.2 dan tabel tambahan v0.3.
+
+**Database v0.2 yang sudah ada:** jalankan `schema/postgresql_tambahan.sql` sekali pada PostgreSQL sebelum memakai loader v0.3. SQL dirancang idempoten, tanpa menghapus data v0.2. Jangan mengandalkan volume Docker lama menjalankan skrip init otomatis.
 
 ```bash
-cp .env.example .env
-# Ganti POSTGRES_PASSWORD dahulu
-# Perlu Docker/Compose berjalan:
-docker compose up --build -d
+# Untuk PostgreSQL yang sudah disiapkan:
+psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f schema/postgresql_tambahan.sql
+RPI_DATABASE_URL="$POSTGRES_DSN" python scripts/load_postgres.py --apply
 ```
 
-Docker API hanya diekspos pada `127.0.0.1:8000` untuk penggunaan lokal. Baca [panduan deployment](docs/DEPLOYMENT.md) sebelum mengaksesnya dari jaringan publik. Tanpa Docker gunakan `schema/postgresql.sql` dan `scripts/load_postgres.py` sesuai panduan.
+`RPI_DATABASE_URL` dipakai oleh API/Compose; `NOR_DATABASE_URL` lama masih diterima. Loader membutuhkan PostgreSQL dengan skema terpasang dan `psycopg`, serta **belum diuji terhadap server PostgreSQL riil dalam sesi ini**.
 
-## API tersedia
+## Data dan bukti
 
-| Endpoint | Tujuan |
-|---|---|
-| `/v1/meta` | Status dataset dan kode resmi terverifikasi |
-| `/v1/sectors` | Daftar sektor editorial |
-| `/v1/occupations?q=...` | Pencarian, filter, pagination |
-| `/v1/occupations/{id}` | Detail pekerjaan dan jabatan |
-| `/v1/job-titles` | Jabatan organisasi |
-| `/v1/employment-contexts` | Konteks kerja |
-| `/v1/kbji/codes` | Kode dari mapping yang diverifikasi saja |
-| `/v1/exports/occupations.json` | Unduh JSON |
-| `/v1/exports/occupations.csv` | Unduh CSV |
-| `/healthz`, `/docs`, `/openapi.json` | Health, Swagger, kontrak API |
+- KBJI = klasifikasi pekerjaan; jabatan ASN = nomenklatur jabatan; KBLI = kegiatan usaha. Jangan dicampur.
+- Kode wilayah harus mencantumkan sistem kodenya (misalnya BPS/Kemendagri), tahun/edisi, sumber, dan status verifikasi; kode disimpan sebagai teks.
+- UMP/UMK **bukan** rata-rata atau median upah. Sumber, satuan, cakupan, jumlah sampel bila tersedia, dan periode wajib jelas.
+- Data `resmi`, `survei`, dan `estimasi` dipisahkan. Data draf tidak keluar melalui endpoint pengupahan publik.
+- Repository ini tidak menyimpan informasi gaji per orang, NIK, atau data pribadi.
 
-[Lihat kontrak API lengkap](docs/API.md).
+Dokumentasi: [pengembangan dan kamus data v0.3](docs/PENGEMBANGAN_V03.md) · [ketentuan sumber](docs/SOURCE_POLICY.md) · [arsitektur v0.2 dan kompatibilitas](docs/ARCHITECTURE.md) · [API lama](docs/API.md).
 
-## Struktur repositori
-
-```text
-.github/workflows/ci.yml           # validasi dan artefak otomatis
-nor_id/api.py                      # FastAPI read-only, SQLite/PostgreSQL
-schema/postgresql.sql             # model relasional produksi
-data/                             # CSV kanonik, sumber, referensi
-scripts/build_sqlite.py           # SQLite offline atomik
-scripts/load_postgres.py          # loader PostgreSQL transaksional
-scripts/build_release.py          # snapshot CSV/JSON/SQLite + hash
-scripts/validate.py               # validasi pekerjaan & kode KBJI
-scripts/search.py                 # pencarian SQLite CLI
-scripts/export_json.py            # JSON offline
-tests/                            # test katalog dan integrasi API
-docs/                             # panduan arsitektur dan integrasi
-Dockerfile, compose.yml           # pengembangan berbasis kontainer
-pyproject.toml                    # paket Python + dependensi opsional
-```
-
-## Prinsip data dan lisensi
-
-Pekerjaan ≠ jabatan organisasi ≠ status kepegawaian ≠ bidang usaha. **KBJI** adalah klasifikasi pekerjaan; **KBLI** klasifikasi kegiatan usaha. `occupation_id` adalah identifier internal stabil, tidak sama dengan kode KBJI; kode KBJI hanya boleh ditambahkan dengan edisi, sumber, tanggal dan verifikator. Jangan mengklaim 39 sektor sebagai klasifikasi resmi. Proyek ini tidak memuat data pribadi, NIK, atau data kepegawaian individu.
-
-Kode proyek berlisensi MIT. Data resmi eksternal hanya dapat diimpor dan didistribusikan sesuai hak/lisensi sumber masing-masing. Lihat [kebijakan sumber](docs/SOURCE_POLICY.md) dan [panduan kontribusi](CONTRIBUTING.md).
-
-## Dokumen lain
-
-- [Arsitektur multiplatform](docs/ARCHITECTURE.md)
-- [Deployment / Docker / PostgreSQL](docs/DEPLOYMENT.md)
-- [Integrasi SKPGen](docs/INTEGRATION_SKPGEN.md)
-- [Kamus data](docs/DATA_DICTIONARY.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Perubahan](CHANGELOG.md)
-
-Repositori dibuat **secara lokal**; publikasi ke akun/organisasi GitHub tertentu memerlukan penentuan pemilik remote. Arsip Git Bundle dapat dikloning tanpa kehilangan commit.
+Repo Git dibuat lokal. Publikasi GitHub dan deploy produksi membutuhkan pemilik remote serta lingkungan yang disetujui.

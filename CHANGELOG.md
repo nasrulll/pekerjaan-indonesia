@@ -1,4 +1,14 @@
-# Changelog
+# Riwayat Perubahan
+
+## 0.3.0 — 15 Oktober 2026
+
+- Nama baru dalam Bahasa Indonesia: **Registri Pekerjaan Indonesia (RPI)**, dengan kompatibilitas NOR-ID v0.2.0.
+- Tabel baru: jabatan nasional, wilayah administratif, pemetaan jabatan KBJI, kompetensi jabatan, upah minimum, statistik upah, kelas gaji, dan riwayat impor.
+- API Bahasa Indonesia: status registri, pekerjaan, jabatan, wilayah, upah minimum, statistik upah. API Inggris lama tidak dihapus.
+- Validasi data sumber, kode wilayah berhierarki, UMP/UMK sesuai level wilayah, satuan/statistik, dan bukti verifikasi.
+- Ekspor CSV/JSON lokal berbahasa Indonesia, snapshot SQLite, manifest checksum, dan PostgreSQL skema serta loader.
+- Tidak menambahkan angka upah atau kode KBJI/wilayah yang tidak memiliki verifikasi sumber.
+- Docker/PostgreSQL tersedia sebagai konfigurasi; uji DB nyata dan publikasi GitHub belum dilakukan.
 
 ## v0.2.0 — 2026-10-15 — Multiplatform data + REST API
 

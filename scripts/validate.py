@@ -79,7 +79,11 @@ def check(root=ROOT):
         title_ids.add(row['title_id'])
         if row['occupation_id'] not in ids: errors.append(f'job_titles:{i}: unknown occupation')
         if row['context_code'] and row['context_code'] not in context_ids: errors.append(f'job_titles:{i}: unknown context')
+    from validasi_pengembangan import validasi
+    tambahan, statistik_tambahan = validasi(root, read_csv)
+    errors.extend(tambahan)
     stats={'occupations':len(occ),'sectors':len(sectors),'major_groups':len(groups),'kbji_mappings':len(mappings),'job_titles':len(titles)}
+    stats.update(statistik_tambahan)
     return errors, stats
 
 

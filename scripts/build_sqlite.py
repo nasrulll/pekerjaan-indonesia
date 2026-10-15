@@ -60,6 +60,13 @@ TABLES = (
     ('employment_contexts', 'data/reference/employment_contexts.csv'),
     ('job_titles', 'data/job_titles.csv'),
     ('kbji_mappings', 'data/kbji_mappings.csv'),
+    ('jabatan_nasional','data/jabatan_nasional.csv'),
+    ('wilayah_administratif','data/wilayah_administratif.csv'),
+    ('pemetaan_jabatan_kbji','data/pemetaan_jabatan_kbji.csv'),
+    ('kompetensi_jabatan','data/kompetensi_jabatan.csv'),
+    ('upah_minimum','data/upah_minimum.csv'),
+    ('statistik_upah','data/statistik_upah.csv'),
+    ('kelas_gaji','data/kelas_gaji.csv'),
 )
 
 # Identifiers are fixed; never interpolate unexpected CSV headers as SQL.
@@ -79,6 +86,7 @@ def build(db_path: Path, root=ROOT):
         con = sqlite3.connect(temporary)
         try:
             con.executescript(SCHEMA)
+            con.executescript((root/"schema/sqlite_tambahan.sql").read_text(encoding="utf-8"))
             for table, filename in TABLES:
                 rows = read_csv(root / filename)
                 if not rows:
@@ -88,7 +96,7 @@ def build(db_path: Path, root=ROOT):
                     raise ValueError(f"Unexpected CSV columns for {table}")
                 placeholders = ','.join('?' for _ in cols)
                 con.executemany(f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})',
-                                [tuple(r[c] for c in cols) for r in rows])
+                                [tuple(r[c] if table in ('sectors','data_sources','occupations','employment_contexts','job_titles','kbji_mappings') or r[c] != '' else None for c in cols) for r in rows])
             aliases = [(r['occupation_id'], alias.strip())
                        for r in read_csv(root / 'data/occupations.csv')
                        for alias in r['alternative_names'].split('|') if alias.strip()]

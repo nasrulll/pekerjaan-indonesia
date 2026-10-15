@@ -18,7 +18,7 @@ services:
     build: .
     command: ["python", "scripts/load_postgres.py", "--apply"]
     environment:
-      NOR_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
+      RPI_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
     depends_on:
       db:
         condition: service_healthy
@@ -28,8 +28,8 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     environment:
-      NOR_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
-      NOR_CORS_ORIGINS: ${NOR_CORS_ORIGINS:-}
+      RPI_DATABASE_URL: postgresql+psycopg://norid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/norid
+      RPI_CORS_ORIGINS: ${RPI_CORS_ORIGINS:-${NOR_CORS_ORIGINS:-}}
     depends_on:
       seed:
         condition: service_completed_successfully

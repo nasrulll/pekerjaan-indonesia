@@ -21,3 +21,12 @@
 6. Ajukan PR, review, dan merge. Pertahankan mapping edisi sebelumnya.
 
 **Batasan:** Validasi teknis memeriksa format/provenance dasar, **tidak** memeriksa kesesuaian substantif kode KBJI terhadap sumber asli. Review manual tetap wajib.
+
+
+## Tambahan kebijakan pengupahan v0.3
+
+- UMP dan UMK harus didukung keputusan resmi pemerintah daerah yang relevan untuk tahun berlaku; tidak boleh dicampur dengan rata-rata/median survei.
+- Wilayah harus mempunyai `sistem_kode` dan catatan sumber. Kode dari BPS dan Kemendagri tidak boleh diperlakukan identik tanpa pemetaan verifikasi.
+- Simpan ketidaktersediaan data sebagai tidak tersedia, bukan angka nol atau estimasi tersembunyi.
+- Catat `satuan`, `cakupan_pekerja`, `jenis_data`, `tahun`, dan `jumlah_sampel` jika tersedia untuk statistik upah.
+- Penyelarasan data upah menurut pekerjaan per kabupaten/kota hanya boleh dilakukan jika granularitas publikasi dan mutu sampelnya memadai.

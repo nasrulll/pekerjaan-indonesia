@@ -23,11 +23,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTICE = "Katalog kurasi; tidak merupakan klasifikasi resmi KBJI. Periksa status dan bukti pemetaan."
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 
 def database_url() -> str:
-    custom = os.getenv("NOR_DATABASE_URL")
+    custom = os.getenv("RPI_DATABASE_URL") or os.getenv("NOR_DATABASE_URL")
     if custom:
         return custom
     return "sqlite+pysqlite:///" + str(ROOT / "dist" / "pekerjaan-indonesia.sqlite3")
@@ -110,10 +110,10 @@ def build_app(url: str | None = None) -> FastAPI:
         finally:
             app.state.engine.dispose()
 
-    app = FastAPI(title="Pekerjaan Indonesia / NOR-ID", version=VERSION,
+    app = FastAPI(title="Registri Pekerjaan Indonesia (RPI)", version=VERSION,
                   description=NOTICE, lifespan=lifespan,
                   contact={"name": "NOR-ID maintainers"})
-    allowed = [s.strip() for s in os.getenv("NOR_CORS_ORIGINS", "").split(",") if s.strip()]
+    allowed = [s.strip() for s in (os.getenv("RPI_CORS_ORIGINS") or os.getenv("NOR_CORS_ORIGINS", "")).split(",") if s.strip()]
     if allowed:
         app.add_middleware(CORSMiddleware, allow_origins=allowed,
                            allow_credentials=False, allow_methods=["GET"], allow_headers=["*"])
@@ -264,6 +264,8 @@ def build_app(url: str | None = None) -> FastAPI:
         return Response("\ufeff" + buffer.getvalue(), media_type="text/csv; charset=utf-8",
                         headers={"Content-Disposition": 'attachment; filename="nor-id-occupations.csv"'})
 
+    from .api_indonesia import pasang_rute
+    pasang_rute(app, db, escaped_like, paginate, occupation_rows)
     return app
 
 
