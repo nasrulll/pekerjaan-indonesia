@@ -28,6 +28,24 @@ jobs:
       - run: python -m pip install -e '.[server,postgres,test]'
       - run: python scripts/impor_multibasis.py --buat-skema --terapkan
       - run: python scripts/impor_multibasis.py --terapkan
+      - name: Uji pembuatan tabel historis aditif
+        run: |
+          python - <<'PY'
+          import os
+          from sqlalchemy import inspect, select, func
+          from nor_id.basis_data import buat_mesin
+          from nor_id.skema_histori import metadata_histori
+          mesin = buat_mesin(os.environ['RPI_DATABASE_URL'])
+          try:
+              with mesin.begin() as koneksi:
+                  metadata_histori.create_all(koneksi, checkfirst=True)
+                  metadata_histori.create_all(koneksi, checkfirst=True)
+                  assert set(metadata_histori.tables).issubset(set(inspect(koneksi).get_table_names()))
+                  for t in metadata_histori.sorted_tables:
+                      assert koneksi.execute(select(func.count()).select_from(t)).scalar_one() == 0
+          finally:
+              mesin.dispose()
+          PY
       - name: Uji API nyata terhadap PostgreSQL
         run: |
           python - <<'PY'
@@ -61,6 +79,24 @@ jobs:
       - run: python -m pip install -e '.[server,mysql,test]'
       - run: python scripts/impor_multibasis.py --buat-skema --terapkan
       - run: python scripts/impor_multibasis.py --terapkan
+      - name: Uji pembuatan tabel historis aditif
+        run: |
+          python - <<'PY'
+          import os
+          from sqlalchemy import inspect, select, func
+          from nor_id.basis_data import buat_mesin
+          from nor_id.skema_histori import metadata_histori
+          mesin = buat_mesin(os.environ['RPI_DATABASE_URL'])
+          try:
+              with mesin.begin() as koneksi:
+                  metadata_histori.create_all(koneksi, checkfirst=True)
+                  metadata_histori.create_all(koneksi, checkfirst=True)
+                  assert set(metadata_histori.tables).issubset(set(inspect(koneksi).get_table_names()))
+                  for t in metadata_histori.sorted_tables:
+                      assert koneksi.execute(select(func.count()).select_from(t)).scalar_one() == 0
+          finally:
+              mesin.dispose()
+          PY
       - name: Uji API nyata terhadap MariaDB
         run: |
           python - <<'PY'
