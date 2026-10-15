@@ -2,11 +2,14 @@
 
 ## Prinsip
 
+Hasil CI terkait: [integrasi PostgreSQL & MariaDB](https://github.com/nasrulll/pekerjaan-indonesia/actions/workflows/integrasi-sql.yml). Bukti pengujian bukan jaminan kesiapan beban produksi.
+
 - **Git/CSV** adalah master data dan riwayat review. Seluruh database adalah replika untuk baca atau layanan, **bukan** sumber kebenaran baru. ID pekerjaan/jabatan stabil lintas versi.
 - SQLAlchemy menyediakan lapisan schema, parameter dan koneksi; **kompilasi DDL tidak sama dengan uji integrasi native**. Perbedaan collation, ukuran indeks, BLOB/CLOB, timezone, locks, dan batas panjang index harus dites pada server nyata.
 - **SQLite**: snapshot offline diverifikasi; importer `impor_multibasis` sudah dites dengan SQLite dua kali.
-- **PostgreSQL**: ada loader native lama dan loader generik; tidak ada live PostgreSQL yang tersedia pada sesi ini.
-- **MySQL, MariaDB, SQL Server, Oracle**: dialect/DDL dan adapter sudah ada, tetapi migrasi native/loader dan API belum dibuktikan pada server riil. Jangan gunakan di produksi sebelum tes migrasi/upsert/pagination/rollback masing-masing.
+- **PostgreSQL**: loader generik, impor ulang idempoten, dan pengujian API pada layanan PostgreSQL nyata di GitHub Actions **lulus** (15 Oktober 2026). Belum disertifikasi untuk produksi.
+- **MariaDB**: loader generik, impor ulang idempoten, dan pengujian API pada layanan MariaDB nyata di GitHub Actions **lulus** (15 Oktober 2026). Belum disertifikasi untuk produksi.
+- **MySQL, SQL Server, Oracle**: dialect/DDL dan adapter sudah ada, tetapi impor/API belum dibuktikan pada server riil untuk setiap mesin; jangan gunakan di produksi sebelum pengujian migrasi/upsert/pagination/rollback masing-masing.
 - **DuckDB/Parquet**: ekspor Parquet opsional untuk analitik (bergantung `pyarrow`); bukan mesin transaksi kanonis. MongoDB dan TiDB belum didukung resmi karena butuh adapter dan pengujian terpisah. Supabase memakai PostgreSQL (butuh uji akses nyata).
 
 ## Driver / URL

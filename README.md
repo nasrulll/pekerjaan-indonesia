@@ -154,6 +154,18 @@ Endpoint lama seperti `/v1/occupations` tetap dipertahankan untuk kompatibilitas
 
 Pengujian [PostgreSQL/MariaDB](https://github.com/nasrulll/pekerjaan-indonesia/actions/workflows/integrasi-sql.yml) merupakan pengujian di CI, **bukan sertifikasi siap produksi**.
 
+## 🧪 Alat audit data nasional — pengembangan v0.5.0
+
+Alat berikut **tersedia di branch utama**, tetapi **belum berisi data resmi nasional yang terverifikasi**. Keluaran berstatus kandidat dan wajib melewati tinjauan manusia.
+
+| Area | Alat | Panduan |
+|---|---|---|
+| KBJI | [Audit taksonomi dan kandidat kode](scripts/audit_kbji.py) | [Alur KBJI](docs/ALUR_AUDIT_KBJI.md) |
+| Wilayah | [Audit sistem kode dan edisi](scripts/audit_wilayah.py) | [Alur wilayah](docs/ALUR_AUDIT_WILAYAH.md) |
+| UMP/UMK | [Audit keputusan upah minimum](scripts/audit_upah_minimum.py) | [Alur upah](docs/ALUR_AUDIT_UPAH_MINIMUM.md) |
+
+Perubahan fondasi teknis: [PR #8](https://github.com/nasrulll/pekerjaan-indonesia/pull/8), [PR #10](https://github.com/nasrulll/pekerjaan-indonesia/pull/10), dan [PR #11](https://github.com/nasrulll/pekerjaan-indonesia/pull/11). Pekerjaan pengumpulan dan verifikasi **masih terbuka** pada issue #1–#3.
+
 ## 🗺️ Roadmap pengembangan
 
 ```mermaid

@@ -1,11 +1,23 @@
 # Roadmap RPI — keputusan arsitektur terkunci
 
-## Sudah diimplementasikan secara lokal
+## Riwayat rilis fondasi (hingga tag v0.4.0)
 
 - **v0.1.0** — katalog awal 811 pekerjaan draf, 39 sektor editorial, klasifikasi 10 kelompok besar.
 - **v0.2.0** — SQLite, PostgreSQL schema/loader, Git, CSV/JSON, API, CI.
 - **v0.3.0** — nama berbahasa Indonesia; struktur jabatan, wilayah, pengupahan, kompetensi dan kelas gaji; API baca-saja berbahasa Indonesia; tanpa data resmi yang belum terverifikasi.
 - **v0.4.0** — adapter/DDL/loader generik enam SQL (hanya SQLite diuji live), pencarian sinonim, struktur ISCO/ESCO/O_NET, endpoint analitik, contoh SDK enam bahasa, dashboard statis, sinkronisasi checksum paket lokal, Parquet opsional, kebijakan lisensi, kontribusi dan pengujian regresi.
+
+## Pengembangan v0.5.0 — status terkini
+
+Kode alat audit nasional sudah di-merge, tetapi dataset resmi tetap belum tersedia:
+
+- **KBJI (#1):** validator manifest, audit kode/edisi/hierarki, dan calon pemetaan nama. [Panduan KBJI](ALUR_AUDIT_KBJI.md).
+- **Wilayah (#2):** audit sistem kode dan edisi wilayah, jenis provinsi/kabupaten/kota serta induk. [Panduan wilayah](ALUR_AUDIT_WILAYAH.md).
+- **UMP/UMK (#3):** audit keputusan, tanggal, nominal dan status revisi; bukan statistik rata-rata. [Panduan upah](ALUR_AUDIT_UPAH_MINIMUM.md).
+
+Semua menggunakan data sintetis pada pengujian. **0 kode KBJI terverifikasi, 0 wilayah resmi terverifikasi, 0 data UMP/UMK terverifikasi**. Penambahan data resmi memerlukan izin redistribusi, sumber primer, pemeriksaan edisi, dan persetujuan manusia.
+
+Repositori sudah dipublikasikan di GitHub; pada pengujian CI di 15 Oktober 2026, SQLite, PostgreSQL, dan MariaDB telah memiliki bukti integrasi. Ini tidak berarti siap produksi. MySQL langsung, SQL Server, dan Oracle belum memiliki pengujian server yang setara. Tag `v0.4.0` tetap terkunci dan tidak diubah.
 
 ## Kapabilitas yang sudah memiliki fondasi tetapi tetap menunggu hasil eksternal
 
