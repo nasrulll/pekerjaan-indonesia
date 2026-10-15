@@ -55,7 +55,7 @@ def create_release(root: Path = ROOT, output: Path | None = None) -> dict:
     keluaran_pekerjaan[1].write_text(json.dumps(pekerjaan_lokal,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     tambahan = {}
     for nama in ('jabatan_nasional','wilayah_administratif','upah_minimum',
-                 'statistik_upah','kompetensi_jabatan','kelas_gaji','pemetaan_jabatan_kbji'):
+                 'statistik_upah','kompetensi_jabatan','kelas_gaji','pemetaan_jabatan_kbji','pemetaan_internasional'):
         sumber = root / 'data' / f'{nama}.csv'
         tujuan_csv = output / f'{nama}.csv'
         tujuan_json = output / f'{nama}.json'
@@ -64,7 +64,7 @@ def create_release(root: Path = ROOT, output: Path | None = None) -> dict:
         tambahan[nama] = (tujuan_csv, tujuan_json)
     semua_file = (sqlite, json_file, csv_file) + keluaran_pekerjaan + tuple(f for pair in tambahan.values() for f in pair)
     manifest = {
-        'version': '0.3.0',
+        'version': '0.4.0',
         'catalog_status': 'curated_draft_not_official',
         'counts': stats,
         'files': {

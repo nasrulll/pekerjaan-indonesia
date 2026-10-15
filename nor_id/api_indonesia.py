@@ -34,7 +34,7 @@ def pasang_rute(app: FastAPI, ambil_db, cari_literal, halaman, daftar_pekerjaan_
             mulai: Annotated[int,Query(ge=0,le=1000000)]=0):
         syarat=[];param={}
         if nama.strip():
-            syarat.append("(LOWER(o.preferred_name_id) LIKE :nama ESCAPE '\\' OR LOWER(o.alternative_names) LIKE :nama ESCAPE '\\')")
+            syarat.append("(LOWER(o.preferred_name_id) LIKE :nama ESCAPE '!' OR LOWER(o.alternative_names) LIKE :nama ESCAPE '!')")
             param['nama']=cari_literal(nama)
         if id_sektor:
             syarat.append('o.sector_id=:id_sektor');param['id_sektor']=id_sektor
@@ -60,7 +60,7 @@ def pasang_rute(app: FastAPI, ambil_db, cari_literal, halaman, daftar_pekerjaan_
         with ambil_db(request).connect() as conn:
             for tabel in daftar:  # Daftar nama tabel tetap, bukan berasal dari parameter pengguna.
                 hasil[tabel]=conn.execute(text(f'SELECT COUNT(*) FROM {tabel}')).scalar_one()
-        return {'versi':'0.3.0','nama':'Registri Pekerjaan Indonesia',
+        return {'versi':'0.4.0','nama':'Registri Pekerjaan Indonesia',
                 'jumlah_pekerjaan_draf_atau_lainnya':hasil['occupations'],
                 'jumlah_jabatan':hasil['jabatan_nasional'],
                 'jumlah_wilayah':hasil['wilayah_administratif'],
@@ -79,7 +79,7 @@ def pasang_rute(app: FastAPI, ambil_db, cari_literal, halaman, daftar_pekerjaan_
             mulai: Annotated[int, Query(ge=0,le=1000000)] = 0):
         syarat=[]; param={}
         if nama.strip():
-            syarat.append("LOWER(j.nama_jabatan) LIKE :nama ESCAPE '\\'")
+            syarat.append("LOWER(j.nama_jabatan) LIKE :nama ESCAPE '!'")
             param['nama']=cari_literal(nama)
         if id_pekerjaan:
             syarat.append('j.id_pekerjaan=:id_pekerjaan');param['id_pekerjaan']=id_pekerjaan

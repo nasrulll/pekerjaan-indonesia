@@ -22,3 +22,12 @@
 
 - Katalog kurasi 811 pekerjaan, 39 sektor editorial, 10 kelompok mayor KBJI.
 - CSV + skema awal PostgreSQL + builder SQLite, JSON, validator, test, GitHub Actions.
+
+## [0.4.0] - 2026-10-15
+- Menambahkan skema portabel 17 tabel, validasi URL/driver dan loader transaksional idempoten untuk enam dialek SQL. SQLite teruji; dialek lainnya dikompilasi tanpa koneksi live.
+- Menambahkan relasi pemetaan internasional ISCO/ESCO/O_NET dengan kewajiban sumber, versi dan reviewer, masih tanpa data terverifikasi.
+- Menambahkan endpoint `cari-pekerjaan`, `pemetaan-internasional`, dan `analisis/pengupahan` serta pagination yang disesuaikan untuk SQL Server/Oracle.
+- Membuat pemutakhiran paket CSV lokal berbasis checksum dan validasi, paket Parquet opsional, contoh SDK enam bahasa, dan dashboard web baca-saja.
+- Menambahkan kebijakan sumber, lisensi data, audit keamanan, issue/PR template dan pemeriksaan CI terjadwal.
+- Menjaga semua nilai upah/KBJI/wilayah tanpa bukti tetap kosong serta mempertahankan seluruh riwayat versi Git dan API sebelumnya.
+- Menambahkan installer Alembic untuk database baru (menolak tabel eksisting), snapshot DDL lintas 6 dialek, dan konfigurasi job integrasi nyata PostgreSQL/MariaDB pada CI (belum dijalankan di GitHub).

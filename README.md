@@ -1,40 +1,38 @@
 # Registri Pekerjaan Indonesia (RPI)
 
-**Repositori Git terbuka untuk pekerjaan, jabatan, wilayah administratif, dan data pengupahan Indonesia.**
+**RPI v0.4.0 — Katalog pekerjaan, jabatan, wilayah, pengupahan dan interoperabilitas basis data.** Repositori Git terbuka dengan data kurasi awal dan API baca-saja berbahasa Indonesia; **bukan** database seluruh pekerjaan resmi dan bukan penyedia angka gaji resmi yang sudah lengkap.
 
-**Versi 0.3.0** — PostgreSQL (produksi), SQLite (offline), REST API, CSV dan JSON. **Seluruh modul, tabel baru, bidang dan endpoint baru menggunakan penamaan Bahasa Indonesia.** Paket lama `nor_id`, tabel sumber awal (`occupations`, `job_titles`), variabel `NOR_*` serta API lama tetap dipertahankan sebagai lapisan kompatibilitas v0.2.0.
-
-> **Peringatan tentang cakupan:** Dataset saat ini memiliki **811 pekerjaan kurasi/draf**, **39 sektor editorial**, **3 contoh jabatan draf**, dan **0 pemetaan kode KBJI yang telah diverifikasi**. Belum ada kode wilayah resmi maupun nominal UMP/UMK/statistik upah di master dataset. Ini **belum** merupakan katalog lengkap Indonesia atau sumber pengupahan resmi. Angka tahun atau gaji tidak boleh diciptakan sendiri.
+> **Cakupan jujur saat ini:** **811 judul pekerjaan kurasi draf** pada **39 sektor editorial**, **10 kelompok besar KBJI sebagai referensi klasifikasi**, **3 jabatan contoh berstatus draf**. **0 pemetaan kode KBJI resmi tervalidasi**, **0 wilayah administratif terverifikasi**, **0 data UMP/UMK**, **0 statistik upah**, **0 pemetaan internasional terverifikasi**. Tidak ada angka imajiner. Nama sektor bukan kode KBLI dan jabatan bukan KBJI.
 
 ## Modul
 
-| Modul | Kemampuan | Status |
+1. **Katalog Pekerjaan Nasional** — judul/alias/identitas stabil, pencarian, API.
+2. **Katalog Jabatan Nasional** — hierarki, jenis jabatan, konteks kerja, relasi KBJI.
+3. **Referensi Wilayah Administratif** — sistem kode wilayah dan histori edisi lewat Git.
+4. **Statistik Pengupahan Daerah** — UMP/UMK, statistik rata-rata/median terpisah.
+5. **Kompetensi dan Jenjang Karier** — kompetensi, kelas gaji, kualifikasi (skema siap).
+6. **Sinkronisasi dan Validasi Data** — checksum, paket tersertifikasi, review PR, riwayat Git.
+7. **Analisis Pekerjaan dan Penghasilan** — endpoint ringkasan yang hanya membaca data terverifikasi dan dashboard statis.
+8. **Interoperabilitas** — pemetaan internasional ISCO/ESCO/O*NET berbukti (struktur tersedia, data belum diisi).
+
+## Status teknis dan batasan
+
+| Teknologi | Implementasi | Status pengujian |
 |---|---|---|
-| Katalog Pekerjaan Nasional | Pencarian 811 pekerjaan dan sektor editorial | Tersedia, data masih draf |
-| Katalog Jabatan Nasional | Relasi pekerjaan, jenjang, induk jabatan, dan konteks kerja | Struktur aktif; 3 contoh draf |
-| Referensi Wilayah Administratif | Kode wilayah per sistem, provinsi, kabupaten dan kota | Struktur dan API aktif; data 0 |
-| Statistik Pengupahan Daerah | UMP, UMK, rata-rata, median, cakupan, tahun, sumber | Struktur dan API aktif; data 0 |
-| Kompetensi dan Jenjang Karier | Kompetensi jabatan, kategori, jenjang, dan kelas gaji | Struktur aktif; data 0 |
-| Sinkronisasi Data Resmi | Validasi sumber, tanggal, verifikasi dan audit impor | Validasi tersedia; konektor otomatis belum dibuat |
-| Analisis Pekerjaan dan Penghasilan | Keluaran untuk visualisasi lintas wilayah/tahun | Struktur/API tersedia; dashboard belum dibuat |
+| PostgreSQL | Skema, loader native lama & generik | Kompilasi DDL; **belum diuji live v0.4** |
+| SQLite | Skema, loader, snapshot offline | **Teruji**, termasuk idempoten dan foreign key |
+| MySQL | Adapter SQLAlchemy/DDL/loader generik | Kompilasi DDL saja, **belum live** |
+| MariaDB | Adapter SQLAlchemy/DDL/loader generik | Kompilasi DDL saja, **belum live** |
+| Microsoft SQL Server | Adapter SQLAlchemy/ODBC, pagination | Kompilasi DDL/pagination, **belum live** |
+| Oracle | Adapter SQLAlchemy/oracledb, pagination | Kompilasi DDL/pagination, **belum live** |
+| REST API + OpenAPI | Endpoint Bahasa Indonesia + alias lama | **Teruji pada SQLite** |
+| CSV, JSON, SQLite snapshot & SHA-256 | Paket rilis reproducible | **Teruji** |
+| Parquet/DuckDB | Skrip ekspor Parquet opsional | **Belum diuji runtime** (pyarrow/duckdb belum ada) |
+| Dashboard dan SDK | Dashboard statis, contoh 6 bahasa | Dashboard **belum browser diuji**; TypeScript/PHP/Java lolos sintaks/kompilasi lokal; .NET/Dart belum diuji |
 
-## Arsitektur singkat
+**Tidak ada deployment produksi atau konektor resmi BPS/Kemnaker yang terpasang.** Nama adapter tidak berarti sudah sertifikasi produksi.
 
-```text
-Git + CSV terkurasi (master)
-        │
-  Validasi dan review
-        ├──────────→ PostgreSQL (produksi)
-        ├──────────→ SQLite (offline)
-        ├──────────→ JSON / CSV + SHA-256
-        └──────────→ REST API / OpenAPI
-                           │
-                  Web / Mobile / SKPGen / HRIS
-```
-
-## Instalasi
-
-Python 3.10+ diperlukan.
+## Mulai dalam 3 langkah (lokal)
 
 ```bash
 python -m pip install -e '.[server,test]'
@@ -44,46 +42,51 @@ python scripts/build_release.py
 uvicorn nor_id.api:app --host 127.0.0.1 --port 8000
 ```
 
-Dokumentasi REST API tersedia di `http://127.0.0.1:8000/docs` jika server dijalankan. Nama modul dan endpoint baru menggunakan Bahasa Indonesia.
+Dokumentasi OpenAPI: `http://127.0.0.1:8000/docs` atau `/openapi.json`.
 
-## Endpoint REST baru
+Contoh URL API:
 
-| Endpoint | Fungsi |
-|---|---|
-| `GET /v1/status-registri` | Jumlah data yang terisi |
-| `GET /v1/pekerjaan?nama=perawat` | Pencarian pekerjaan; keluaran Bahasa Indonesia |
-| `GET /v1/pekerjaan/{id_pekerjaan}` | Detail pekerjaan |
-| `GET /v1/jabatan?nama=kepala` | Katalog dan hierarki jabatan |
-| `GET /v1/wilayah?jenis_wilayah=provinsi` | Wilayah yang sudah terverifikasi |
-| `GET /v1/upah-minimum?tahun=2026` | UMP/UMK terverifikasi |
-| `GET /v1/statistik-upah?tahun=2026` | Statistik upah terverifikasi |
-
-Endpoint v0.2 tetap berjalan, seperti `/v1/occupations`, `/v1/job-titles`, `/v1/meta` dan `/v1/exports/occupations.json`.
-
-**Nilai kosong tidak diganti nol.** Jika statistik belum tersedia API mengembalikan daftar kosong dengan penanda `data_tersedia=false`; daftar contoh dalam pengujian tidak masuk master dataset.
-
-## Migrasi PostgreSQL
-
-**Database baru:** berkas `schema/postgresql.sql` mencakup tabel v0.2 dan tabel tambahan v0.3.
-
-**Database v0.2 yang sudah ada:** jalankan `schema/postgresql_tambahan.sql` sekali pada PostgreSQL sebelum memakai loader v0.3. SQL dirancang idempoten, tanpa menghapus data v0.2. Jangan mengandalkan volume Docker lama menjalankan skrip init otomatis.
-
-```bash
-# Untuk PostgreSQL yang sudah disiapkan:
-psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f schema/postgresql_tambahan.sql
-RPI_DATABASE_URL="$POSTGRES_DSN" python scripts/load_postgres.py --apply
+```text
+GET /v1/status-registri
+GET /v1/pekerjaan?nama=perawat
+GET /v1/jabatan?nama=kepala
+GET /v1/cari-pekerjaan?kata=guru
+GET /v1/wilayah?jenis_wilayah=provinsi
+GET /v1/upah-minimum?tahun=2026
+GET /v1/statistik-upah?tahun=2026
+GET /v1/analisis/pengupahan?tahun=2026
+GET /v1/pemetaan-internasional?sistem_klasifikasi=ISCO
 ```
 
-`RPI_DATABASE_URL` dipakai oleh API/Compose; `NOR_DATABASE_URL` lama masih diterima. Loader membutuhkan PostgreSQL dengan skema terpasang dan `psycopg`, serta **belum diuji terhadap server PostgreSQL riil dalam sesi ini**.
+Jalur API lama `/v1/occupations`, `/v1/job-titles`, dan `/v1/exports/occupations.json` tetap ada demi kompatibilitas v0.2.0. Paket internal Python `nor_id` dipertahankan sebagai nama teknis lama; nama publik tetap RPI.
 
-## Data dan bukti
+## Migrasi & impor SQL multiplatform
 
-- KBJI = klasifikasi pekerjaan; jabatan ASN = nomenklatur jabatan; KBLI = kegiatan usaha. Jangan dicampur.
-- Kode wilayah harus mencantumkan sistem kodenya (misalnya BPS/Kemendagri), tahun/edisi, sumber, dan status verifikasi; kode disimpan sebagai teks.
-- UMP/UMK **bukan** rata-rata atau median upah. Sumber, satuan, cakupan, jumlah sampel bila tersedia, dan periode wajib jelas.
-- Data `resmi`, `survei`, dan `estimasi` dipisahkan. Data draf tidak keluar melalui endpoint pengupahan publik.
-- Repository ini tidak menyimpan informasi gaji per orang, NIK, atau data pribadi.
+```bash
+python scripts/impor_multibasis.py                  # dry-run, tidak ada perubahan
+# HANYA pada database kosong:
+RPI_DATABASE_URL='sqlite+pysqlite:////tmp/rpi.sqlite3' python scripts/impor_multibasis.py --buat-skema --terapkan
+# Pembaruan idempoten; database harus sudah dimigrasikan:
+RPI_DATABASE_URL='sqlite+pysqlite:////tmp/rpi.sqlite3' python scripts/impor_multibasis.py --terapkan
+```
 
-Dokumentasi: [pengembangan dan kamus data v0.3](docs/PENGEMBANGAN_V03.md) · [ketentuan sumber](docs/SOURCE_POLICY.md) · [arsitektur v0.2 dan kompatibilitas](docs/ARCHITECTURE.md) · [API lama](docs/API.md).
+Untuk engine lain, instal driver opsional dan isi `RPI_DATABASE_URL`. Jangan masukkan kredensial ke Git. **Jangan gunakan `--buat-skema` pada database produksi yang telah berisi tabel.** Cara migrasi PostgreSQL v0.3: `schema/postgresql_interoperabilitas.sql`. Tersedia pratinjau DDL lintas enam dialek di `schema/ddl/` dan migrasi Alembic hanya untuk database baru di `migrasi/`. Penjelasan detail: [interoperabilitas](docs/INTEROPERABILITAS.md).
 
-Repo Git dibuat lokal. Publikasi GitHub dan deploy produksi membutuhkan pemilik remote serta lingkungan yang disetujui.
+## Rilis dan pembaruan dataset
+
+`python scripts/build_release.py` membuat snapshot SQLite, CSV/JSON dan `dist/manifest.json` dengan checksum SHA-256. `python scripts/ekspor_parquet.py` membutuhkan `pyarrow` opsional. Mekanisme paket resmi lokal: [penyegaran data](docs/PENYEGARAN_DATA.md); uji checksum, skema, dan relasi sebelum review manusia dan merge PR.
+
+Data resmi eksternal belum diunduh, sehingga tidak ada klaim cakupan seluruh wilayah atau UMP/UMK. Anda dapat mengajukan usulan sumber dan pekerjaan melalui [panduan kontribusi](CONTRIBUTING.md) dengan mempertahankan ID stabil. Pertimbangkan hak cipta dan privasi sebelum menambahkan data pihak lain.
+
+## Dokumen proyek
+
+- [Interoperabilitas enam basis data](docs/INTEROPERABILITAS.md)
+- [Sinkronisasi dan verifikasi sumber](docs/PENYEGARAN_DATA.md)
+- [Keamanan, kualitas dan kinerja](docs/KEAMANAN_KINERJA.md)
+- [Lisensi dan hak redistribusi](DATA_LICENSE.md)
+- [Kebijakan sumber data](docs/SOURCE_POLICY.md)
+- [Contoh SDK berbagai bahasa](sdk/README.md)
+- [Dashboard statis](dashboard/index.html)
+- [Roadmap menuju rilis stabil](docs/ROADMAP.md)
+
+**Penguncian:** v0.3.0 dipertahankan pada tag Git; v0.4.0 menjadi baseline baru setelah pengujian. Repo masih lokal, belum dipublikasikan ke GitHub karena pemilik remote belum ditentukan. RPI v1.0 hanya boleh diumumkan setelah kriteria verifikasi data dan integrasi produksi terpenuhi.

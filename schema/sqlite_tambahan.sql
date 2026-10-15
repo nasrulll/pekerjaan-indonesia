@@ -92,3 +92,13 @@ CREATE INDEX idx_jabatan_pekerjaan ON jabatan_nasional(id_pekerjaan);
 CREATE INDEX idx_wilayah_induk ON wilayah_administratif(sistem_kode,kode_induk);
 CREATE INDEX idx_upah_minimum_wilayah ON upah_minimum(sistem_kode,kode_wilayah,tahun);
 CREATE INDEX idx_statistik_upah_wilayah ON statistik_upah(sistem_kode,kode_wilayah,tahun,metrik);
+
+-- Penambahan lintas klasifikasi internasional dan versi rilis (v0.4).
+CREATE TABLE pemetaan_internasional (
+ id_pemetaan TEXT PRIMARY KEY, id_pekerjaan TEXT NOT NULL REFERENCES occupations(occupation_id),
+ sistem_klasifikasi TEXT NOT NULL, edisi TEXT NOT NULL, kode TEXT NOT NULL,
+ nama_resmi TEXT NOT NULL, sumber_id TEXT NOT NULL REFERENCES data_sources(source_id),
+ diverifikasi_oleh TEXT NOT NULL, tanggal_verifikasi TEXT NOT NULL,
+ UNIQUE(id_pekerjaan,sistem_klasifikasi,edisi,kode));
+CREATE TABLE riwayat_rilis (versi TEXT PRIMARY KEY, hash_manifest TEXT NOT NULL,
+ waktu_rilis TEXT NOT NULL, status TEXT NOT NULL);

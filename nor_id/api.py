@@ -20,10 +20,11 @@ from fastapi.responses import Response
 from sqlalchemy import bindparam, create_engine, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import SQLAlchemyError
+from .basis_data import sql_berhalaman
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTICE = "Katalog kurasi; tidak merupakan klasifikasi resmi KBJI. Periksa status dan bukti pemetaan."
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 
 def database_url() -> str:
@@ -34,16 +35,8 @@ def database_url() -> str:
 
 
 def engine_for(url: str) -> Engine:
-    if url.startswith("sqlite"):
-        # SQLite must have been built beforehand; don't silently open an empty DB.
-        if url.startswith("sqlite+pysqlite:///"):
-            file = Path(url[len("sqlite+pysqlite:///"):])
-            if not file.is_file():
-                raise RuntimeError(f"SQLite tidak ditemukan: {file}. Jalankan python scripts/build_sqlite.py")
-        return create_engine(url, connect_args={"check_same_thread": False}, pool_pre_ping=True)
-    if not url.startswith("postgresql+psycopg://"):
-        raise ValueError("NOR_DATABASE_URL harus sqlite+pysqlite:///... atau postgresql+psycopg://...")
-    return create_engine(url, pool_pre_ping=True)
+    from .basis_data import buat_mesin
+    return buat_mesin(url)
 
 
 def db(request: Request) -> Engine:
@@ -52,7 +45,7 @@ def db(request: Request) -> Engine:
 
 def escaped_like(term: str) -> str:
     """Treat search terms literally, including SQL LIKE wildcard characters."""
-    value = term.strip().lower().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    value = term.strip().lower().replace('!', '!!').replace('%', '!%').replace('_', '!_')
     return '%' + value + '%'
 
 
@@ -61,7 +54,7 @@ def paginate(conn: Connection, from_sql: str, select_sql: str, where: str, param
     """Internal use only; all SQL fragments are defined as literals in this module."""
     total = conn.execute(text(f"SELECT COUNT(*) {from_sql} {where}"), params).scalar_one()
     records = [dict(r) for r in conn.execute(
-        text(f"SELECT {select_sql} {from_sql} {where} ORDER BY {order_sql} LIMIT :limit OFFSET :offset"),
+        text(sql_berhalaman(conn, f"SELECT {select_sql} {from_sql} {where} ORDER BY {order_sql}")),
         {**params, "limit": limit, "offset": offset},
     ).mappings()]
     return {"data": records, "pagination": {"total": total, "limit": limit, "offset": offset,
@@ -159,7 +152,7 @@ def build_app(url: str | None = None) -> FastAPI:
         filters = []
         params = {}
         if q.strip():
-            filters.append("(LOWER(o.preferred_name_id) LIKE :q ESCAPE '\\' OR LOWER(o.alternative_names) LIKE :q ESCAPE '\\')")
+            filters.append("(LOWER(o.preferred_name_id) LIKE :q ESCAPE '!' OR LOWER(o.alternative_names) LIKE :q ESCAPE '!')")
             params["q"] = escaped_like(q)
         if sector_id:
             filters.append("o.sector_id = :sector_id")
@@ -198,7 +191,7 @@ def build_app(url: str | None = None) -> FastAPI:
             filters.append("t.occupation_id=:occupation_id")
             params["occupation_id"] = occupation_id
         if q.strip():
-            filters.append("LOWER(t.title_name_id) LIKE :q ESCAPE '\\'")
+            filters.append("LOWER(t.title_name_id) LIKE :q ESCAPE '!'")
             params["q"] = escaped_like(q)
         where = "WHERE " + " AND ".join(filters) if filters else ""
         with db(request).connect() as conn:
@@ -224,10 +217,10 @@ def build_app(url: str | None = None) -> FastAPI:
         grouped = """FROM kbji_mappings k """ + where + " GROUP BY k.kbji_edition,k.kbji_code,k.kbji_label_id,k.source_id"
         with db(request).connect() as conn:
             total = conn.execute(text("SELECT COUNT(*) FROM (SELECT 1 " + grouped + ") counts"), params).scalar_one()
-            data = [dict(r) for r in conn.execute(text("""
+            data = [dict(r) for r in conn.execute(text(sql_berhalaman(conn, """
                 SELECT k.kbji_edition,k.kbji_code,k.kbji_label_id,k.source_id,
                        COUNT(DISTINCT k.occupation_id) AS occupation_count """ + grouped +
-                " ORDER BY k.kbji_edition,k.kbji_code LIMIT :limit OFFSET :offset"),
+                " ORDER BY k.kbji_edition,k.kbji_code")),
                 {**params, "limit": limit, "offset": offset}).mappings()]
         return {"data": data, "pagination": {"total": total, "limit": limit, "offset": offset,
                                                 "has_more": offset + len(data) < total},
@@ -266,6 +259,8 @@ def build_app(url: str | None = None) -> FastAPI:
 
     from .api_indonesia import pasang_rute
     pasang_rute(app, db, escaped_like, paginate, occupation_rows)
+    from .fitur_lanjutan import pasang_fitur
+    pasang_fitur(app, db, paginate)
     return app
 
 

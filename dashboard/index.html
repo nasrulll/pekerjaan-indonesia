@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RPI — Analisis Pekerjaan Indonesia</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17253b;background:#f2f5f9}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1000px;margin:auto;padding:24px}
+header{background:#122847;color:#fff;padding:32px 0}header p{opacity:.8;margin:6px 0}
+h1{font-size:clamp(22px,4vw,32px);margin:0}h2{font-size:19px;margin:0 0 14px}
+.panel{background:white;padding:22px;border:1px solid #dce4ef;border-radius:14px;margin:18px 0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.metric{background:#f4f8fe;padding:16px;border-radius:10px}.metric strong{font-size:28px;display:block;margin:6px 0}
+label{font-weight:600;display:block;margin-bottom:7px}input,select,button{font:inherit;padding:11px;border-radius:8px;border:1px solid #bdcadc;width:100%}
+button{background:#155ac4;border:0;color:white;cursor:pointer}button:hover{background:#0f438d}
+small{color:#49617e}.record{border-bottom:1px solid #e5ebf2;padding:12px 0}.record:last-child{border-bottom:0}
+.status{background:#fff6df;border:1px solid #ddbd6a;border-radius:9px;padding:12px;line-height:1.5}
+</style></head><body>
+<header><div class="wrap"><h1>Registri Pekerjaan Indonesia</h1><p>Pratinjau dashboard · sumber data lokal/API · bukan data statistik resmi yang telah lengkap</p></div></header>
+<main class="wrap">
+<section class="panel"><h2>Hubungkan API RPI</h2><div class="cols"><div><label for="url">Alamat API</label><input id="url" value="http://127.0.0.1:8000" aria-label="Alamat API RPI"></div><div style="align-self:end"><button id="hubungkan">Muat data</button></div></div><p id="pesan" role="status">Jalankan API lokal terlebih dahulu. Jika dibuka dari situs lain, atur CORS hanya untuk origin terpercaya.</p></section>
+<section class="cols" aria-label="Ringkasan data"><div class="metric"><small>Pekerjaan dalam katalog</small><strong id="total-pekerjaan">—</strong><small>Periksa status draf</small></div><div class="metric"><small>Jabatan</small><strong id="total-jabatan">—</strong><small>Termasuk jabatan contoh</small></div><div class="metric"><small>Wilayah</small><strong id="total-wilayah">—</strong><small>Memerlukan verifikasi resmi</small></div><div class="metric"><small>Statistik upah</small><strong id="total-upah">—</strong><small>Hanya data terverifikasi ditampilkan</small></div></section>
+<section class="panel"><h2>Cari pekerjaan</h2><div class="cols"><div><label for="kata">Nama profesi</label><input id="kata" value="Guru"></div><div style="align-self:end"><button id="cari">Cari</button></div></div><div id="hasil"><small>Belum memuat hasil.</small></div></section>
+<section class="panel"><h2>Statistik pengupahan</h2><div class="cols"><div><label for="tahun">Tahun</label><input id="tahun" type="number" value="2026" min="1900" max="2200"></div><div style="align-self:end"><button id="periksa-upah">Periksa ketersediaan</button></div></div><div id="upah" class="status">Data belum dimuat. UMP/UMK tidak sama dengan rata-rata gaji atau median.</div></section>
+</main><script>
+const $=id=>document.getElementById(id);
+function basis(){const x=$('url').value.trim().replace(/\/$/,'');if(!/^https:\/\//.test(x)&&!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(x))throw Error('Hanya HTTPS atau localhost diperbolehkan');return x}
+async function ambil(path){const r=await fetch(basis()+path);if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}
+function tampil(id,value){$(id).textContent=String(value)}
+function gagal(e){tampil('pesan','Tidak dapat memuat API: '+e.message)}
+async function hubungkan(){try{const s=await ambil('/v1/status-registri');tampil('total-pekerjaan',s.jumlah_pekerjaan_draf_atau_lainnya);tampil('total-jabatan',s.jumlah_jabatan);tampil('total-wilayah',s.jumlah_wilayah);tampil('total-upah',s.jumlah_statistik_upah);tampil('pesan','Berhasil memuat data API v'+s.versi+'. Angka tidak menunjukkan semua data telah diverifikasi.')}catch(e){gagal(e)}}
+async function cari(){try{const r=await ambil('/v1/cari-pekerjaan?'+new URLSearchParams({kata:$('kata').value,batas:20}));const area=$('hasil');area.replaceChildren();if(!r.data.length){tampil('hasil','Tidak ada hasil.');return}for(const item of r.data){const row=document.createElement('div');row.className='record';const title=document.createElement('strong');title.textContent=item.nama_pekerjaan;const note=document.createElement('div');note.textContent=item.sektor+' · status '+item.status_data;row.append(title,note);area.appendChild(row)}}catch(e){gagal(e)}}
+async function periksaUpah(){try{const tahun=Number($('tahun').value);if(tahun<1900||tahun>2200)throw Error('Tahun tidak valid');const r=await ambil('/v1/analisis/pengupahan?tahun='+tahun);tampil('upah',r.data_tersedia?`${r.data.length} kelompok statistik ditemukan. Periksa cakupan, sampel, jenis data, dan sumber sebelum perbandingan.`:'Belum ada statistik pengupahan terverifikasi untuk tahun '+tahun+'. Tidak ada angka perkiraan yang disisipkan.')}catch(e){gagal(e)}}
+$('hubungkan').addEventListener('click',hubungkan);$('cari').addEventListener('click',cari);$('periksa-upah').addEventListener('click',periksaUpah);
+</script></body></html>

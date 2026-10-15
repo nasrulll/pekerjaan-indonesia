@@ -1,0 +1,21 @@
+name: Usulan pekerjaan/jabatan
+about: Ajukan pekerjaan atau jabatan setelah memeriksa duplikat
+labels: [data, perlu-verifikasi]
+body:
+  - type: input
+    id: nama
+    attributes:
+      label: Nama pekerjaan atau jabatan
+      placeholder: Contoh nama yang ingin diusulkan
+    validations: {required: true}
+  - type: textarea
+    id: bukti
+    attributes:
+      label: Sumber dan edisi (URL/lisensi)
+      description: Jangan mengarang KBJI; beri sumber primer dan hak pakai data.
+    validations: {required: true}
+  - type: textarea
+    id: referensi
+    attributes:
+      label: ID pekerjaan terkait / pemeriksaan duplikat
+    validations: {required: true}

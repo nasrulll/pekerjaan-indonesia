@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pekerjaan-indonesia"
-version = "0.3.0"
-description = "Registri Pekerjaan Indonesia: pekerjaan, jabatan, wilayah, pengupahan dan API multiplatform"
+version = "0.4.0"
+description = "Registri Pekerjaan Indonesia: katalog, jabatan, pengupahan dan interoperabilitas database"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
@@ -14,6 +14,11 @@ dependencies = ["fastapi>=0.110,<1", "sqlalchemy>=2.0,<3"]
 [project.optional-dependencies]
 server = ["uvicorn>=0.28,<1"]
 postgres = ["psycopg[binary]>=3.1,<4"]
+mysql = ["pymysql>=1.1,<2"]
+mssql = ["pyodbc>=5,<6"]
+oracle = ["oracledb>=2,<4"]
+analitik = ["pyarrow>=15,<25", "duckdb>=1,<2"]
+migrasi = ["alembic>=1.12,<2"]
 test = ["httpx>=0.26,<1"]
 all = ["uvicorn>=0.28,<1", "psycopg[binary]>=3.1,<4", "httpx>=0.26,<1"]
 

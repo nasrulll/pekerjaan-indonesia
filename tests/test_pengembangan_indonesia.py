@@ -53,7 +53,7 @@ class TesPengembanganBahasaIndonesia(unittest.TestCase):
         self.assertEqual(self.client.get('/v1/pekerjaan/tidak-ada').status_code,404)
         self.assertEqual(self.client.get('/v1/pekerjaan?nama=%25').json()['pagination']['total'],0)
         self.assertEqual(self.client.get('/v1/status-registri').json()['jumlah_upah_minimum'],0)
-        self.assertEqual(self.client.get('/healthz').json()['api_version'],'0.3.0')
+        self.assertEqual(self.client.get('/healthz').json()['api_version'],'0.4.0')
 
     def test_tidak_menciptakan_angka_upah(self):
         for uri in ('/v1/wilayah','/v1/upah-minimum?tahun=2026','/v1/statistik-upah?tahun=2026'):
@@ -106,7 +106,7 @@ class TesPengembanganBahasaIndonesia(unittest.TestCase):
     def test_rilis_csv_json_sqlite_dan_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:
             hasil=create_release(output=Path(tmp))
-            self.assertEqual(hasil['version'],'0.3.0')
+            self.assertEqual(hasil['version'],'0.4.0')
             self.assertEqual(hasil['counts']['jabatan_nasional'],3)
             self.assertEqual(json.loads((Path(tmp)/'statistik_upah.json').read_text()),[])
             with (Path(tmp)/'jabatan_nasional.csv').open(encoding='utf-8') as f:

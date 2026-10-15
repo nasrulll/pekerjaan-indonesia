@@ -29,6 +29,7 @@ TABLES = (
     ("upah_minimum","upah_minimum.csv","id_upah"),
     ("statistik_upah","statistik_upah.csv","id_statistik"),
     ("kelas_gaji","kelas_gaji.csv","id_kelas_gaji"),
+    ("pemetaan_internasional","pemetaan_internasional.csv","id_pemetaan"),
 )
 
 
@@ -40,7 +41,7 @@ def rows_for(table: str, location: Path) -> list[dict]:
         if table == "kbji_mappings":
             record["verified_at"] = date.fromisoformat(record["verified_at"])
         if table in ('jabatan_nasional','wilayah_administratif','upah_minimum',
-                     'statistik_upah','kelas_gaji','pemetaan_jabatan_kbji','kompetensi_jabatan'):
+                     'statistik_upah','kelas_gaji','pemetaan_jabatan_kbji','kompetensi_jabatan','pemetaan_internasional'):
             # Typed PostgreSQL date/int columns with nullable CSV fields.
             for k in ('tanggal_verifikasi','tanggal_mulai'):
                 if k in record and record[k]:
@@ -92,6 +93,9 @@ def load(dsn: str, root: Path = ROOT) -> dict[str, int]:
                 cur.execute("SELECT to_regclass('public.jabatan_nasional')")
                 if not cur.fetchone()[0]:
                     raise RuntimeError("Migrasi v0.3 belum terpasang. Jalankan schema/postgresql_tambahan.sql untuk database lama.")
+                cur.execute("SELECT to_regclass('public.pemetaan_internasional')")
+                if not cur.fetchone()[0]:
+                    raise RuntimeError('Migrasi v0.4 belum dipasang. Jalankan schema/postgresql_interoperabilitas.sql.')
                 for table, filename, keys in TABLES:
                     rows = rows_for(table, root / "data" / filename)
                     query, values = statements(table, rows, keys)

@@ -1,0 +1,73 @@
+name: Pengujian integrasi SQL PostgreSQL MariaDB
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rpi
+          POSTGRES_PASSWORD: pengujian-hanya-di-ci
+          POSTGRES_DB: rpi
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U rpi -d rpi"
+          --health-interval 5s --health-timeout 3s --health-retries 15
+    env:
+      RPI_DATABASE_URL: postgresql+psycopg://rpi:pengujian-hanya-di-ci@127.0.0.1:5432/rpi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[server,postgres,test]'
+      - run: python scripts/impor_multibasis.py --buat-skema --terapkan
+      - run: python scripts/impor_multibasis.py --terapkan
+      - name: Uji API nyata terhadap PostgreSQL
+        run: |
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from nor_id.api import build_app
+          with TestClient(build_app()) as c:
+              assert c.get('/healthz').status_code == 200
+              assert c.get('/v1/pekerjaan?batas=1').json()['pagination']['total'] == 811
+              assert c.get('/v1/upah-minimum').json()['data'] == []
+          PY
+  mariadb:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: pengujian-hanya-di-ci
+          MARIADB_DATABASE: rpi
+          MARIADB_USER: rpi
+          MARIADB_PASSWORD: pengujian-hanya-di-ci
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s --health-timeout 3s --health-retries 15
+    env:
+      RPI_DATABASE_URL: mariadb+pymysql://rpi:pengujian-hanya-di-ci@127.0.0.1:3306/rpi?charset=utf8mb4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[server,mysql,test]'
+      - run: python scripts/impor_multibasis.py --buat-skema --terapkan
+      - run: python scripts/impor_multibasis.py --terapkan
+      - name: Uji API nyata terhadap MariaDB
+        run: |
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from nor_id.api import build_app
+          with TestClient(build_app()) as c:
+              assert c.get('/healthz').status_code == 200
+              assert c.get('/v1/pekerjaan?batas=1').json()['pagination']['total'] == 811
+          PY
+# Jobs ini baru dapat diverifikasi setelah repositori diterbitkan dan workflow dijalankan.

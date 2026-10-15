@@ -15,6 +15,7 @@ COLUMNS = {
     "kompetensi_jabatan": ("id_kompetensi","id_jabatan","nama_kompetensi","kategori","tingkat","sumber_id","status_verifikasi"),
     "upah_minimum": ("id_upah","sistem_kode","kode_wilayah","tahun","jenis_upah","nilai_rupiah","tanggal_mulai","sumber_id","status_verifikasi","tanggal_verifikasi","catatan"),
     "statistik_upah": ("id_statistik","sistem_kode","kode_wilayah","tahun","id_pekerjaan","id_jabatan","metrik","nilai_rupiah","satuan","cakupan_pekerja","jenis_data","jumlah_sampel","sumber_id","status_verifikasi","tanggal_verifikasi","catatan"),
+    "pemetaan_internasional": ("id_pemetaan","id_pekerjaan","sistem_klasifikasi","edisi","kode","nama_resmi","sumber_id","diverifikasi_oleh","tanggal_verifikasi"),
     "kelas_gaji": ("id_kelas_gaji","sistem_penggajian","kode_kelas","nama_kelas","nilai_dasar_rupiah","tahun","sumber_id","status_verifikasi"),
 }
 

@@ -15,3 +15,10 @@ python scripts/build_sqlite.py
 
 7. Sertakan konteks sumber, perubahan jumlah entri, serta risiko kompatibilitas API di deskripsi PR.
 8. Kode dan dataset editorial awal dibuat untuk repositori contoh; pastikan lisensi dan atribusi data dari pihak ketiga sebelum kontribusi.
+
+## Aturan tambahan RPI v0.4
+
+- Ajukan kontribusi melalui PR dan gunakan template review; untuk sumber resmi cantumkan URL primer, edisi, tahun, lisensi, bukti verifikasi dan pemeriksa kedua.
+- Jangan mengubah atau mendaur ulang `occupation_id`/`id_jabatan` yang sudah disetujui. Untuk penggantian nama, gunakan nama alternatif dan catat pemetaan lintas edisi.
+- Tidak boleh menambahkan UMP/UMK atau nilai statistik rekaan, maupun mendistribusikan salinan berhak cipta tanpa izin.
+- Untuk perubahan database, pastikan DDL bisa dikompilasi lintas dialek, siapkan jalur migrasi database yang sudah ada, serta tes rollback dan backup bila akan deploy.

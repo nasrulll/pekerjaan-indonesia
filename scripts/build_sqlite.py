@@ -67,6 +67,7 @@ TABLES = (
     ('upah_minimum','data/upah_minimum.csv'),
     ('statistik_upah','data/statistik_upah.csv'),
     ('kelas_gaji','data/kelas_gaji.csv'),
+    ('pemetaan_internasional','data/pemetaan_internasional.csv'),
 )
 
 # Identifiers are fixed; never interpolate unexpected CSV headers as SQL.

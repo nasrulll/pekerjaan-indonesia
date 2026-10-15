@@ -36,3 +36,4 @@ jobs:
             dist/kompetensi_jabatan.*
             dist/kelas_gaji.*
             dist/pemetaan_jabatan_kbji.*
+            dist/pemetaan_internasional.*

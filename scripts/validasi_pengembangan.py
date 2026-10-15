@@ -8,7 +8,7 @@ from catalog_tables import COLUMNS
 
 FILES = {table: f'data/{table}.csv' for table in (
     'jabatan_nasional','wilayah_administratif','pemetaan_jabatan_kbji',
-    'kompetensi_jabatan','upah_minimum','statistik_upah','kelas_gaji')}
+    'kompetensi_jabatan','upah_minimum','statistik_upah','kelas_gaji','pemetaan_internasional')}
 
 
 def validasi(root: Path, pembaca):
@@ -81,7 +81,8 @@ def validasi(root: Path, pembaca):
         ('wilayah_administratif',['sistem_kode','kode_wilayah']),
         ('pemetaan_jabatan_kbji',['id_jabatan','edisi_kbji','kode_kbji']),
         ('kompetensi_jabatan',['id_kompetensi']),('upah_minimum',['id_upah']),
-        ('statistik_upah',['id_statistik']),('kelas_gaji',['id_kelas_gaji'])
+        ('statistik_upah',['id_statistik']),('kelas_gaji',['id_kelas_gaji']),
+        ('pemetaan_internasional',['id_pemetaan'])
     ]:
         unik(tabel, pk)
 
@@ -183,4 +184,18 @@ def validasi(root: Path, pembaca):
             galat.append(f'kelas_gaji:{i}: kelas/status tidak valid')
         tahun('kelas_gaji',i,item)
         if item['nilai_dasar_rupiah']: uang('kelas_gaji',i,item,'nilai_dasar_rupiah',False)
+    kunci_internasional=set()
+    for i,item in enumerate(data['pemetaan_internasional'],2):
+        sumber_item=sumber.get(item['sumber_id'])
+        if item['id_pekerjaan'] not in pekerjaan or not sumber_item or sumber_item['kind']!='official':
+            galat.append(f'pemetaan_internasional:{i}: pekerjaan/sumber resmi tidak valid')
+        if not all(item.get(k) for k in ('sistem_klasifikasi','edisi','kode','nama_resmi','diverifikasi_oleh')) or not tanggal(item['tanggal_verifikasi']):
+            galat.append(f'pemetaan_internasional:{i}: verifikasi dan edisi wajib')
+        if item['sistem_klasifikasi'] not in ('ISCO','ESCO','O_NET'):
+            galat.append(f'pemetaan_internasional:{i}: klasifikasi tidak didukung')
+        if not sumber_item or not sumber_item.get('uri'):
+            galat.append(f'pemetaan_internasional:{i}: URI sumber resmi wajib')
+        kunci=(item['id_pekerjaan'],item['sistem_klasifikasi'],item['edisi'],item['kode'])
+        if kunci in kunci_internasional: galat.append(f'pemetaan_internasional:{i}: pemetaan duplikat')
+        kunci_internasional.add(kunci)
     return galat, {key:len(rows) for key,rows in data.items()}
