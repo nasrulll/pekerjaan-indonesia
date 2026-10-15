@@ -4,6 +4,10 @@
 
 > **Cakupan jujur saat ini:** **811 judul pekerjaan kurasi draf** pada **39 sektor editorial**, **10 kelompok besar KBJI sebagai referensi klasifikasi**, **3 jabatan contoh berstatus draf**. **0 pemetaan kode KBJI resmi tervalidasi**, **0 wilayah administratif terverifikasi**, **0 data UMP/UMK**, **0 statistik upah**, **0 pemetaan internasional terverifikasi**. Tidak ada angka imajiner. Nama sektor bukan kode KBLI dan jabatan bukan KBJI.
 
+## Status publikasi dan pengembangan
+
+GitHub: https://github.com/nasrulll/pekerjaan-indonesia (public). Baseline stabil adalah tag `v0.4.0` dan commit `b6dc6b1`. Workflow [validasi katalog dan API](https://github.com/nasrulll/pekerjaan-indonesia/actions/runs/38728620628) serta [integrasi PostgreSQL/MariaDB](https://github.com/nasrulll/pekerjaan-indonesia/actions/runs/38728621066) telah sukses pada 15 Oktober 2026. Hasil ini bukan sertifikasi produksi. Backlog resmi: issue #1–#7. Tidak ada impor KBJI, wilayah, atau upah resmi sebelum lisensi dan sumber diverifikasi.
+
 ## Modul
 
 1. **Katalog Pekerjaan Nasional** — judul/alias/identitas stabil, pencarian, API.
@@ -19,10 +23,10 @@
 
 | Teknologi | Implementasi | Status pengujian |
 |---|---|---|
-| PostgreSQL | Skema, loader native lama & generik | Kompilasi DDL; **belum diuji live v0.4** |
+| PostgreSQL | Skema dan loader generik | **Lulus integrasi nyata GitHub Actions** (impor, impor ulang, API; belum produksi) |
 | SQLite | Skema, loader, snapshot offline | **Teruji**, termasuk idempoten dan foreign key |
 | MySQL | Adapter SQLAlchemy/DDL/loader generik | Kompilasi DDL saja, **belum live** |
-| MariaDB | Adapter SQLAlchemy/DDL/loader generik | Kompilasi DDL saja, **belum live** |
+| MariaDB | Adapter SQLAlchemy/DDL/loader generik | **Lulus integrasi nyata GitHub Actions** (impor, impor ulang, API; belum produksi) |
 | Microsoft SQL Server | Adapter SQLAlchemy/ODBC, pagination | Kompilasi DDL/pagination, **belum live** |
 | Oracle | Adapter SQLAlchemy/oracledb, pagination | Kompilasi DDL/pagination, **belum live** |
 | REST API + OpenAPI | Endpoint Bahasa Indonesia + alias lama | **Teruji pada SQLite** |
@@ -89,4 +93,4 @@ Data resmi eksternal belum diunduh, sehingga tidak ada klaim cakupan seluruh wil
 - [Dashboard statis](dashboard/index.html)
 - [Roadmap menuju rilis stabil](docs/ROADMAP.md)
 
-**Penguncian:** v0.3.0 dipertahankan pada tag Git; v0.4.0 menjadi baseline baru setelah pengujian. Repo masih lokal, belum dipublikasikan ke GitHub karena pemilik remote belum ditentukan. RPI v1.0 hanya boleh diumumkan setelah kriteria verifikasi data dan integrasi produksi terpenuhi.
+**Penguncian:** v0.3.0 dipertahankan pada tag Git; v0.4.0 menjadi baseline baru setelah pengujian. Repositori telah dipublikasikan di `nasrulll/pekerjaan-indonesia`; pengembangan v0.5.0 berlangsung pada branch `pengembangan/v0.5.0-data-nasional`. RPI v1.0 hanya boleh diumumkan setelah kriteria verifikasi data dan integrasi produksi terpenuhi.
