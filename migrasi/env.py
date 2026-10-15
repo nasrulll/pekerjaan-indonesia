@@ -22,7 +22,7 @@ def online():
     engine=engine_from_config(config.get_section(config.config_ini_section),
                               prefix='sqlalchemy.',poolclass=pool.NullPool)
     with engine.connect() as connection:
-        context.configure(connection=connection,target_metadata=metadata,compare_type=True)
+        context.configure(connection=connection,target_metadata=[metadata, metadata_histori],compare_type=True)
         with context.begin_transaction(): context.run_migrations()
     engine.dispose()
 

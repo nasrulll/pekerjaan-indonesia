@@ -101,3 +101,27 @@ keputusan = Table(
 
 Index("idx_keputusan_wilayah_tahun", keputusan.c.sistem_kode,
       keputusan.c.edisi_wilayah, keputusan.c.kode_wilayah, keputusan.c.tahun)
+
+
+# Ditambahkan melalui revisi Alembic 20261015_0600; bukan data resmi.
+taksonomi_kbji = Table(
+    "taksonomi_kbji_per_edisi", metadata_histori,
+    Column("edisi", Unicode(80), nullable=False),
+    Column("kode", Unicode(8), nullable=False),
+    Column("nama", Unicode(400), nullable=False),
+    Column("kode_induk", Unicode(8)),
+    Column("tingkat", Integer, nullable=False),
+    Column("id_sumber", Unicode(120), ForeignKey("sumber_publikasi.id_sumber"), nullable=False),
+    Column("status_verifikasi", Unicode(24), nullable=False),
+    PrimaryKeyConstraint("edisi", "kode", name="pk_taksonomi_kbji_edisi"),
+    ForeignKeyConstraint(
+        ["edisi", "kode_induk"],
+        ["taksonomi_kbji_per_edisi.edisi", "taksonomi_kbji_per_edisi.kode"],
+        name="fk_taksonomi_kbji_induk",
+    ),
+    CheckConstraint("tingkat BETWEEN 1 AND 9", name="ck_taksonomi_kbji_tingkat"),
+    CheckConstraint(
+        "status_verifikasi IN ('draf','ditinjau','terverifikasi')",
+        name="ck_taksonomi_kbji_status",
+    ),
+)

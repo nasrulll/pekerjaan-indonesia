@@ -23,4 +23,4 @@ test = ["httpx>=0.26,<1"]
 all = ["uvicorn>=0.28,<1", "psycopg[binary]>=3.1,<4", "httpx>=0.26,<1"]
 
 [tool.setuptools.packages.find]
-include = ["nor_id*"]
+include = ["nor_id*", "scripts*"]
