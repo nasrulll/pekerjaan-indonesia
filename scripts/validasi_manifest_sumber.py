@@ -6,7 +6,8 @@ import argparse
 import json
 import re
 from pathlib import Path
-from urllib.parse import urlparse
+from datetime import date
+from urllib.parse import urlsplit
 
 BIDANG_WAJIB = ("jenis_sumber", "penerbit", "judul", "edisi", "url_resmi",
                 "tanggal_terbit", "tanggal_diperiksa", "izin_distribusi",
@@ -25,8 +26,16 @@ def validasi_manifest(data):
         if not isinstance(data[bidang], str) or not data[bidang].strip():
             masalah.append(f"{bidang} harus diisi.")
     url = data["url_resmi"]
-    if not isinstance(url, str) or urlparse(url).scheme != "https" or not urlparse(url).hostname:
+    if not isinstance(url, str) or any(x.isspace() for x in url):
         masalah.append("url_resmi harus URL HTTPS resmi yang dapat diperiksa.")
+    else:
+        try:
+            bagian = urlsplit(url)
+            if bagian.scheme != "https" or not bagian.hostname or bagian.username or bagian.password:
+                masalah.append("url_resmi harus URL HTTPS resmi yang dapat diperiksa.")
+        except ValueError:
+            masalah.append("url_resmi harus URL HTTPS resmi yang dapat diperiksa.")
+    # URL HTTPS secara sintaksis tidak membuktikan kepemilikan instansi.
     if data["izin_distribusi"] not in ("diizinkan", "dilarang", "belum_diperiksa"):
         masalah.append("Status izin_distribusi tidak dikenal.")
     if data["status"] not in ("menunggu_verifikasi", "ditolak", "terverifikasi"):
@@ -36,8 +45,13 @@ def validasi_manifest(data):
         masalah.append("sha256_berkas_sumber harus berupa 64 karakter hex.")
     for field in ("tanggal_terbit", "tanggal_diperiksa"):
         val = data[field]
-        if val is not None and (not isinstance(val, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", val) is None):
-            masalah.append(f"{field} harus ISO YYYY-MM-DD atau null.")
+        if val is None:
+            continue
+        try:
+            if not isinstance(val, str) or date.fromisoformat(val).isoformat() != val:
+                raise ValueError()
+        except ValueError:
+            masalah.append(f"{field} harus tanggal ISO valid YYYY-MM-DD atau null.")
     if data["status"] == "terverifikasi":
         if data["izin_distribusi"] != "diizinkan":
             masalah.append("Tidak boleh verifikasi jika izin redistribusi belum diizinkan.")
