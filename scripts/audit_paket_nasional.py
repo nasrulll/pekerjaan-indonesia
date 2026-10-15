@@ -72,10 +72,17 @@ def audit_rantai_keputusan(rows: list[dict[str, str]]) -> list[str]:
 def audit_paket(berkas: dict[str, tuple[Path, Path, Path | None]],
                 pekerjaan: Path | None = None) -> dict:
     """Audit semua input secara read-only; tidak pernah menulis CSV master."""
-    from scripts.audit_kbji import audit_taksonomi, kandidat_cocok, KOLOM as KBJI_KOLOM
-    from scripts.audit_wilayah import audit_wilayah, KOLOM as WILAYAH_KOLOM
-    from scripts.audit_upah_minimum import audit_upah, KOLOM as UPAH_KOLOM
-    from scripts.validasi_manifest_sumber import validasi_manifest
+    try:
+        from scripts.audit_kbji import audit_taksonomi, kandidat_cocok, KOLOM as KBJI_KOLOM
+        from scripts.audit_wilayah import audit_wilayah, KOLOM as WILAYAH_KOLOM
+        from scripts.audit_upah_minimum import audit_upah, KOLOM as UPAH_KOLOM
+        from scripts.validasi_manifest_sumber import validasi_manifest
+    except ModuleNotFoundError:
+        # Mendukung eksekusi langsung: python scripts/audit_paket_nasional.py
+        from audit_kbji import audit_taksonomi, kandidat_cocok, KOLOM as KBJI_KOLOM
+        from audit_wilayah import audit_wilayah, KOLOM as WILAYAH_KOLOM
+        from audit_upah_minimum import audit_upah, KOLOM as UPAH_KOLOM
+        from validasi_manifest_sumber import validasi_manifest
 
     jenis_sumber = {"kbji": "klasifikasi_kbji", "wilayah": "kode_wilayah", "upah": "upah_minimum"}
     kolom = {"kbji": set(KBJI_KOLOM), "wilayah": WILAYAH_KOLOM, "upah": UPAH_KOLOM}
