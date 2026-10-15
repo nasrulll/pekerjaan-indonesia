@@ -4,7 +4,7 @@ Tidak menghapus atau menulis ulang wilayah_administratif dan upah_minimum
 yang telah dipakai pada v0.4.0. Downgrade otomatis sengaja dinonaktifkan.
 """
 from alembic import op
-from nor_id.skema_histori import metadata_histori
+from nor_id.skema_histori import metadata_histori, sumber, wilayah, keputusan
 
 revision = "20261015_0500"
 down_revision = "20261015_0400"
@@ -16,7 +16,7 @@ def upgrade():
     # create_all(checkfirst) aman ketika migrasi awal v0.4 dijalankan bersama
     # tabel baru, dan mencegah upaya membuat tabel yang sudah tersedia.
     bind = op.get_bind()
-    metadata_histori.create_all(bind, checkfirst=True)
+    metadata_histori.create_all(bind, tables=[sumber, wilayah, keputusan], checkfirst=True)
 
 
 def downgrade():
